@@ -57,7 +57,7 @@ export function validateProject(v: unknown): asserts v is Project {
     for (const a of f.variants) { if (!obj(a) || !text(a.id) || variants.has(a.id) || !text(a.name) || !array(a.notes, 100000)) throw Error('別案データが不正です。'); variants.add(a.id); const ids = new Set<string>(); for (const n of a.notes) { checkNote(n); if (ids.has((n as Note).id)) throw Error('別案の音符IDが重複しています。'); ids.add((n as Note).id); } }
   }
 }
-export const endTick = (p: Project) => p.notes.reduce((m, n) => Math.max(m, n.startTick + n.durationTick), PPQ * 4);
+export const endTick = (p: Project) => p.pedals.reduce((m, e) => Math.max(m, e.tick), p.notes.reduce((m, n) => Math.max(m, n.startTick + n.durationTick), PPQ * 4));
 export function audibleNotes(p: Project): Note[] { const solo = p.parts.some(x => x.solo); const ids = new Set(p.parts.filter(x => !x.mute && (!solo || x.solo)).map(x => x.id)); return p.notes.filter(x => ids.has(x.partId)); }
 export function bounds(notes: Note[]) { let start = Infinity, end = -Infinity, low = Infinity, high = -Infinity; for (const n of notes) { start = Math.min(start, n.startTick); end = Math.max(end, n.startTick + n.durationTick); low = Math.min(low, n.pitch); high = Math.max(high, n.pitch); } return { start, end, low, high }; }
 export class ProjectStore extends EventTarget {

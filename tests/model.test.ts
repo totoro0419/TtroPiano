@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ProjectStore, newProject, exampleProject, uid, initialSession, validateProject, type Note } from '../src/model';
+import { ProjectStore, newProject, exampleProject, uid, initialSession, validateProject, endTick, type Note } from '../src/model';
 import { TempoMap, effectiveEnd, planWindow } from '../src/time';
 import { exportMidi, importMidi } from '../src/midi';
 const fixture = () => { const p = newProject(); const n: Note = { id: uid(), partId: p.parts[0].id, startTick: 0, durationTick: 960, pitch: 60, velocity: 80 }; p.notes.push(n); return { p, n, store: new ProjectStore(p), ids: new Set([n.id]) }; };
@@ -19,3 +19,4 @@ test('MIDI roundtrip preserves notes, 2 hands/parts, velocities, tempo, meters a
 test('MIDI parser rejects truncated files, unsupported timing and illegal running status',()=>{const b=exportMidi(exampleProject());for(const n of [0,8,13,b.length-3])assert.throws(()=>importMidi(b.subarray(0,n)));const smpte=b.slice();smpte[12]=0x80;assert.throws(()=>importMidi(smpte));});
 test('10,000 note MIDI roundtrip and edit/undo keeps all notes',()=>{const {p,n}=fixture();p.notes=Array.from({length:10000},(_,i)=>({...n,id:uid(),pitch:21+i%88,startTick:i*120,durationTick:120}));const store=new ProjectStore(p);const ids=new Set(p.notes.slice(0,100).map(x=>x.id));store.move(ids,960,0);store.undo();assert.deepEqual(store.project.notes,p.notes);assert.equal(importMidi(exportMidi(p)).project.notes.length,10000);});
 test('seeking inside a held chord chases its sample phase once, including pedal sustain',()=>{const {p,n}=fixture();p.pedals=[{id:uid(),tick:0,value:127},{id:uid(),tick:1920,value:0}];const map=new TempoMap(p.tempos),loop=initialSession(p).loop;const first=planWindow(p,p.notes,map,1440,0,.1,loop);assert.equal(first.length,1);assert.equal(first[0].time,0);assert.equal(first[0].offset,map.seconds(1440));assert.ok(first[0].duration>0);assert.equal(planWindow(p,p.notes,map,1440,.1,.2,loop).length,0);});
+test('song end includes a pedal release after the final written note',()=>{const {p,n}=fixture();p.pedals=[{id:uid(),tick:0,value:127},{id:uid(),tick:7680,value:0}];assert.equal(effectiveEnd(p,n),7680);assert.equal(endTick(p),7680);});

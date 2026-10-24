@@ -45,3 +45,15 @@ test('real offline: cached app, saved composition and piano samples survive netw
   await page.locator('#play').click(); await expect(page.locator('#play')).toHaveAttribute('aria-pressed', 'true', { timeout: 10000 });
   await page.locator('#stop').click(); await context.setOffline(false);
 });
+
+test('pedal tail outlives the final written note without early transport stop', async ({ page }) => {
+  await page.goto('/'); const roll = page.locator('#roll');
+  await roll.click({ position: { x: 80, y: 220 } });
+  await page.locator('#tempo').click(); await page.locator('#settings-form input[name="bpm"]').fill('300'); await page.getByRole('button', { name: '適用', exact: true }).click();
+  await page.locator('#expression').click(); await page.getByRole('button', { name: 'ここで踏む', exact: true }).click();
+  await roll.click({ position: { x: 506, y: 18 } }); await page.getByRole('button', { name: 'ここで離す', exact: true }).click();
+  await page.locator('#stop').click(); await page.locator('#play').click(); await expect(page.locator('#play')).toHaveAttribute('aria-pressed', 'true');
+  // At 300 BPM: note ends at .3s, old end+grace was .925s, pedal ends at 1.6s.
+  await page.waitForTimeout(1200); await expect(page.locator('#play')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#stop').click();
+});
