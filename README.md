@@ -50,6 +50,8 @@ npm run build  # 音源hash検証、型確認、本番dist、オフラインキ�
 npm run preview
 ```
 
+CIでは `npx playwright install --with-deps chromium` → `npm run test:browser` で本番ブラウザー試験も実行する。
+
 `/qa/` はブラウザー統合試験画面。「検証を実行」で合成タッチ、実サンプル出力、Worker保存、MIDI往復、10,000音を確認しJSONを取得できる。テスト用作品だけを生成・除去する。再実行時はページを再読込する。
 
 ピアノ音源は同梱済み。元の86MBのSF3は不要。再生成する場合だけPython 3/FFmpegと提供SF3を用い、`python3 scripts/extract-piano.py /path/to/MuseScore_General_Full.sf3` を実行する。権利表示は [音源ライセンス](public/piano/LICENSE.txt)。
@@ -68,6 +70,10 @@ npm run preview
 静的Webアプリ。`dist/` をHTTPSの静的ホストへ配信できる。GitHub Actionsにテスト/ビルド、成果物、Pages用ワークフローを収録。
 
 GitHub Pagesは作業開始時点では未有効。Pagesを使う場合、リポジトリの **Settings → Pages → Source: GitHub Actions** が必要。PRは自動マージしない。試用ページとPRの実際の公開結果は検証記録に記す。
+
+- [試用ページ（ChatGPTログインが必要）](https://ttropiano-compose.ibukioike2009.chatgpt.site)
+- [実装PR #1](https://github.com/totoro0419/TtroPiano/pull/1)
+- [本番ブラウザー・オフライン試験の成功記録](https://github.com/totoro0419/TtroPiano/actions/runs/40119548820)
 
 作品は端末内のみ。ブラウザーのサイトデータを削除すると作品も消えるため、長く残す作品は `.ttropiano` ファイルにも書き出せる。音符/声部/別案/演奏表現/視点をまとめて保持する。
 

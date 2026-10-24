@@ -1,6 +1,6 @@
 # 01 — 製品仕様 / Product specification
 
-Status: 設計案 v0.1。ユーザーの要望に基づく仕様。実装・実機での有効性は未確認。
+Status: v0.1の製品要求を保持。v0.2の実装範囲は [08](08_IMPLEMENTATION_STATUS.md)、検証結果は [10](10_VALIDATION.md)。実機での有効性は未確認。
 
 ## 1. プロダクトの定義
 
