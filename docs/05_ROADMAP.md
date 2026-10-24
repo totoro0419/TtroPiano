@@ -1,6 +1,6 @@
 # 05 — 段階的開発計画 / Delivery roadmap
 
-現段階は**設計図作成のみ**。未作成のアプリを「実装済み」「完成」としない。
+v0.1時点の段階計画を保持。v0.2の機能実装は [08](08_IMPLEMENTATION_STATUS.md)、実測結果は [10](10_VALIDATION.md)。各段階の実機・初見ゲートが通るまでは正式合格とはしない。
 
 ## M0 設計と競合の検証（現フェーズ）
 
@@ -88,4 +88,4 @@ docs/
   07_100_PROBLEMS.md
 ```
 
-アプリを開始するときは別途 `src/`, `public/`, `tests/` を設ける。**今は未作成**。
+v0.2で `src/`, `public/`, `tests/`, `scripts/`, `qa/`, `.github/workflows/` を追加済み。
