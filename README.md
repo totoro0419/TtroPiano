@@ -73,7 +73,7 @@ GitHub Pagesは作業開始時点では未有効。Pagesを使う場合、リポ
 
 - [試用ページ（ChatGPTログインが必要）](https://ttropiano-compose.ibukioike2009.chatgpt.site)
 - [実装PR #1](https://github.com/totoro0419/TtroPiano/pull/1)
-- [本番ブラウザー・オフライン試験の成功記録](https://github.com/totoro0419/TtroPiano/actions/runs/40119548820)
+- [本番ブラウザー・オフライン試験の成功記録](https://github.com/totoro0419/TtroPiano/actions/runs/40120289169)
 
 作品は端末内のみ。ブラウザーのサイトデータを削除すると作品も消えるため、長く残す作品は `.ttropiano` ファイルにも書き出せる。音符/声部/別案/演奏表現/視点をまとめて保持する。
 

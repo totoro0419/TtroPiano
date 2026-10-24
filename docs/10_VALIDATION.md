@@ -7,19 +7,19 @@
 | 検査 | 結果 | 証拠 |
 |---|---|---|
 | TypeScript | PASS | `npm run check` / `npm run build` 終了0 |
-| モデル・Undo/Redo・一括編集・別案・テンポ・ペダル・MIDI | PASS：15テスト | `npm test`。`tests/model.test.ts` |
+| モデル・Undo/Redo・一括編集・別案・テンポ・ペダル・MIDI | PASS：16テスト | `npm test`。`tests/model.test.ts` |
 | 音源一式の完全性 | PASS：40ファイル/4,693,896bytes | SHA-256/byte数/ライセンス照合、`scripts/verify-assets.mjs` |
 | ブラウザー統合 | PASS：20シナリオ | [browser-validation-dev.json](evidence/browser-validation-dev.json)、`src/qa.ts` |
 | 全サンプルの実デコード | PASS：40/40、すべてステレオ・非無音 | 統合試験14 |
 | 音声グラフの強弱/持続 | PASS：OfflineAudioContextから実波形取得 | 統合試験15。スピーカーの実聴とは別 |
 | ネイティブ画面操作 | PASS：3音追加→移動→再生→自動保存、作例読込 | Cloud Chromeで実際のポインター操作。画像 [editor.jpg](evidence/editor.jpg) |
 | MIDI/作品ファイルの実ダウンロード | PASS | CIのネイティブUI試験で実ファイル生成→再読込。取得したMIDIを別プロセスでも解析して2音の音高/時刻/長さ/強弱を照合。証拠 [MIDI](evidence/native-download.mid)、[作品](evidence/native-download.ttropiano) |
-| CIの本番ブラウザー・ネット切断・ダウンロード | PASS：3/3 | [GitHub Actions実行](https://github.com/totoro0419/TtroPiano/actions/runs/40119548820)、[ログ抜粋/環境](evidence/ci-validation.json) |
+| CIの本番ブラウザー・ネット切断・ダウンロード | PASS：4/4 | [GitHub Actions実行](https://github.com/totoro0419/TtroPiano/actions/runs/40120289169)、[ログ抜粋/環境](evidence/ci-validation.json) |
 | HTTPS試用ページ | 公開PASS、認証後のUIは未確認 | [試用](https://ttropiano-compose.ibukioike2009.chatgpt.site)。公開処理の成功とChatGPTログイン画面を確認。所有者向けの非公開ページ |
 
 環境：Cloud Chrome **155.0.0.0 / Linux x86_64**、1363×936 CSS px。縦画面はiframe内で390×760、横画面は1024×600。物理的な端末回転ではない。検査ページはHTTPのためService Workerはここでは未確認。記録時刻：2026-10-25 02:40 JST。
 
-本番ビルドのCI環境：Ubuntu GitHub runner、Chrome for Testing **156.0.8078.4**、1024×768、touch有効。2026-10-25 03:12 JSTの実行で、統合20シナリオ、ネイティブUIのファイル出力/再入力、ネット切断後の再読込・追加入力・保存・サンプル音源の再生の3試験を実行し全PASS。試験対象は `0835361f8b53954ce5dafbc9cd9ca208c0c26145`。以後の記録更新はドキュメント/証拠のみ。
+本番ビルドのCI環境：Ubuntu GitHub runner、Chrome for Testing **156.0.8078.4**、1024×768、touch有効。2026-10-25 03:21 JSTの実行で、統合20シナリオ、ネイティブUIのファイル出力/再入力、ネット切断後の再読込・追加入力・保存・サンプル音源の再生に加え、曲末ペダルの実再生の4試験を実行し全PASS。試験対象は `c9f5e6a1e2e53f40d9c73841b69f89ccbba66d1e`。以後の記録更新はドキュメント/証拠のみ。
 
 Cloud Browserでのdownloadイベント取得はタイムアウトしたが、CIの通常のChromiumでは実ダウンロードが成功した。前者のツール結果だけから機能成功を宣言せず、後者のファイルを取得して内容も独立に検査した。
 
@@ -68,6 +68,10 @@ Cloud Browserでのdownloadイベント取得はタイムアウトしたが、CI
 8. 初回CIでネット切断後のJS/CSS読込に失敗 → トレースでCORS要求のOriginと `Vary: Origin` を特定。明示した静的資産だけをヘッダー差によらず検索し、ネット切断/再読込/編集/保存/ピアノ再生を再検査してPASS。
 
 保存競合の拒否だけでなく、画面の「保存失敗」表示、失敗後の編集時もエラーを維持すること、再試行後の保存回復まで統合試験10を補強。試験11ではUIから右手・ミュート・ソロを変更して発音対象を確認、試験16では再生中のテンポ変更後の時計/再生継続も検査した。
+
+9. 最後の音符より後にペダルを離す曲で曲末判定が早い → 単体試験で3840tickと7680tickの不一致を確認。曲長をペダルイベントまで含めるよう修正し、300BPMの実再生で従来の停止時刻を過ぎても持続区間の再生が続くことを検査してPASS。
+
+証拠のMIDI/作品ファイルは実行40119548820の取得物。最終実行40120289169でもダウンロード・再読込を再検査してPASS。
 
 ## 未確認・実行不能
 
