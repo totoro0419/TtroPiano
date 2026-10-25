@@ -105,6 +105,54 @@ test('native touch: independent keyboard chord and interrupted note drag', async
   await page.locator('#apply-pending').click(); await expect(page.locator('#pending-edit')).toBeHidden();
   await page.locator('#undo').click(); await expect(page.locator('#selection-count')).toHaveText('1音');
 });
+test('two-finger tap undoes once, while pinch, holding and interrupted edit do not', async ({ page, context }) => {
+  await openEditor(page);
+  const roll = page.locator('#roll'), r = (await roll.boundingBox())!;
+  await roll.click({ position: { x: 170, y: 220 } });
+  await roll.click({ position: { x: 260, y: 180 } });
+  const cdp = await context.newCDPSession(page);
+  const send = (type: 'touchStart' | 'touchMove' | 'touchEnd' | 'touchCancel', points: { id: number; x: number; y: number }[]) =>
+    cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points });
+  const a = { id: 51, x: r.x + 350, y: r.y + 250 }, b = { id: 52, x: r.x + 475, y: r.y + 270 };
+  await send('touchStart', [a, b]); await send('touchEnd', []);
+  await roll.press('ControlOrMeta+a'); await expect(page.locator('#selection-count')).toHaveText('1音');
+  await roll.click({ position: { x: 330, y: 160 } });
+  await send('touchStart', [a, b]);
+  await send('touchMove', [{...a, x: a.x - 30}, {...b, x: b.x + 30}]);
+  await send('touchEnd', []);
+  await roll.press('ControlOrMeta+a'); await expect(page.locator('#selection-count')).toHaveText('2音');
+  await send('touchStart', [a, b]); await page.waitForTimeout(330); await send('touchEnd', []);
+  await roll.press('ControlOrMeta+a'); await expect(page.locator('#selection-count')).toHaveText('2音');
+  await send('touchStart', [a, b]); await send('touchCancel', []);
+  await roll.press('ControlOrMeta+a'); await expect(page.locator('#selection-count')).toHaveText('2音');
+});
+
+test('ruler drag scrubs live; tap still seeks; choosing or Shift-drag selects a time range', async ({ page }) => {
+  await openEditor(page);
+  const roll = page.locator('#roll'), r = (await roll.boundingBox())!;
+  await roll.click({ position: { x: 170, y: 220 } });
+  await roll.click({ position: { x: 270, y: 180 } });
+  const point = (x: number) => ({ x: r.x + x, y: r.y + 12 });
+  await page.mouse.move(point(112).x, point(112).y); await page.mouse.down();
+  await page.mouse.move(point(350).x, point(350).y, {steps: 5});
+  await expect(page.locator('#position')).not.toHaveText('1.1');
+  const whileDragging = await page.locator('#position').textContent();
+  await page.mouse.up();
+  await expect(page.locator('#position')).toHaveText(whileDragging!);
+  await page.locator('#pick-select').click();
+  await page.mouse.move(point(115).x, point(115).y); await page.mouse.down();
+  await page.mouse.move(point(345).x, point(345).y, {steps: 3}); await page.mouse.up();
+  await expect(page.locator('#selection-count')).toHaveText('2音');
+  await roll.click({ position: { x: 60, y: 12 } });
+  await expect(page.locator('#position')).toHaveText('1.1');
+  await page.keyboard.down('Shift');
+  await page.mouse.move(point(115).x, point(115).y); await page.mouse.down();
+  await page.mouse.move(point(345).x, point(345).y, {steps: 3}); await page.mouse.up();
+  await page.keyboard.up('Shift');
+  await expect(page.locator('#selection-count')).toHaveText('2音');
+  await expect(page.locator('#position')).toHaveText('1.1');
+});
+
 const RULER = 36;
 
 test('selection keeps canvas and dock stable across tablet orientations; numeric keyboard route remains', async ({ page }) => {
