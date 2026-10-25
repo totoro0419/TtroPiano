@@ -8,6 +8,7 @@ import { TempoMap } from './time';
 import { icon } from './icons';
 import { AppMenu, type MenuCommand } from './menu';
 import { WorkLibrary } from './library';
+import { StartScreen, type HomeCommand } from './home';
 const escape = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 const button = (id: string, name: string, glyph = '', cls = '') => `<button type="button" id="${id}" class="${cls}" title="${name}" aria-label="${name}">${glyph ? icon(glyph) : ''}<span>${name}</span></button>`;
 interface InstallPrompt extends Event { prompt(): Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> }
@@ -25,11 +26,14 @@ export class App {
   offlineError = '';
   menu!: AppMenu;
   library!: WorkLibrary;
+  home!: StartScreen;
+  hasProject = false;
+  get homeVisible() { return !this.$('#home').hidden; }
   constructor(root: HTMLElement, public test = false) {
-    this.root = root; root.classList.add('app-shell'); this.store = new ProjectStore(newProject()); this.session = initialSession(this.store.project);
+    this.root = root; root.classList.add('app-shell'); this.store = new ProjectStore(newProject()); this.session = initialSession(this.store.project); this.hasProject = test;
     this.transport = new Transport(this.piano, () => this.store.project, () => this.session, message => this.notify(message));
-    root.innerHTML = `<header class="topbar">
-      <div class="identity">${button('menu-button', 'メニュー', 'menu', 'menu-button')}${button('works', '作品', 'folder', 'quiet labeled')}<span class="brand">TtroPiano</span><div class="document-title"><button id="rename" title="作品名を変更"><span id="project-name"></span><span class="pencil">⌄</span></button><button id="save-status" class="save-status" aria-live="polite">作品を読込中</button></div></div>
+    root.innerHTML = `<div id="editor" class="editor-shell" inert aria-hidden="true"><header class="topbar">
+      <div class="identity">${button('menu-button', 'メニュー', 'menu', 'menu-button')}${button('works', '作品', 'folder', 'quiet labeled')}<button id="home-button" class="brand" title="スタート画面へ" aria-label="スタート画面へ">TtroPiano</button><div class="document-title"><button id="rename" title="作品名を変更"><span id="project-name"></span><span class="pencil">⌄</span></button><button id="save-status" class="save-status" aria-live="polite">作品を読込中</button></div></div>
       <div class="transport">${button('undo', '元に戻す', 'undo', 'icon-button')}${button('redo', 'やり直す', 'redo', 'icon-button')}<span class="divider"></span>${button('stop', '曲頭へ戻る', 'stop', 'icon-button')}${button('play', '再生', 'play', 'primary play-button')}<button id="tempo" class="tempo-button" title="テンポ・拍子を設定"><strong>100</strong><small>BPM · 4/4</small></button></div>
       <div class="header-end">${button('settings', '曲の設定', 'settings', 'quiet labeled')}</div>
     </header>
@@ -37,10 +41,15 @@ export class App {
     <main class="workspace"><section class="roll-area" aria-label="ピアノロール"><canvas id="roll" tabindex="0" aria-label="音符エディター。空白タップで音符追加、音符タップで削除、ドラッグで移動、右端で伸縮、選ぶボタンまたは目盛りドラッグで選択、2本指で移動と拡大。キーボード操作はヘルプ参照。"></canvas></section><aside id="inspector" class="inspector" hidden aria-label="音符と演奏表現"></aside></main>
     <div id="pending-edit" class="pending-edit" hidden role="status"><span>2本指に切替 · 音符の変更を保留中</span><button id="apply-pending">変更を適用</button><button id="discard-pending">取消</button></div>
     <footer class="bottombar"><div class="quick-actions" role="group" aria-label="選択した音符の操作">${button('pick-select', '選ぶ')}<span id="selection-count" aria-live="polite">0音</span>${button('quick-listen', '聴く', 'play')}${button('quick-duplicate', '複製', 'copy')}${button('quick-group', 'まとめる')}${button('quick-details', '詳細')}</div><span class="footer-spacer"></span><label class="part-control"><i id="part-dot"></i><select id="active-part" aria-label="入力する声部"></select></label>${button('expression', '表現', '', 'quiet')}<label class="compact-control"><span>音の長さ</span><select id="note-length" aria-label="新しい音符の長さ"><option value="240">¼拍</option><option value="480">½拍</option><option value="960" selected>1拍</option><option value="1920">2拍</option><option value="3840">4拍</option><option value="120">⅛拍</option><option value="320">⅓拍</option></select></label><label class="compact-control"><span>吸着</span><select id="snap" aria-label="拍グリッド吸着"><option value="0">なし</option><option value="120">⅛拍</option><option value="240" selected>¼拍</option><option value="480">½拍</option><option value="960">1拍</option><option value="320">⅓拍</option></select></label>${button('fit', '全体', 'fit', 'quiet labeled')}<div class="zoom-controls"><button id="zoom-out" title="縮小" aria-label="縮小">−</button><button id="zoom-in" title="拡大" aria-label="拡大">＋</button></div><button id="help" class="help-button" title="操作のヒント" aria-label="操作のヒント">?</button></footer>
+    </div><main id="home" class="home-screen" aria-labelledby="home-title" tabindex="-1"></main>
     <div id="app-menu" class="app-menu" popover="auto" role="menu" aria-label="TtroPianoのメニュー"></div>
     <div id="floating" class="floating" popover="auto" role="dialog" aria-label="曲と操作の設定" tabindex="-1"></div>
     <dialog id="library-dialog" class="library-dialog" aria-label="作品一覧"></dialog><dialog id="ask-dialog" class="ask-dialog" aria-label="確認"></dialog>
+    <dialog id="install-guide" class="install-guide" aria-labelledby="install-guide-title"><div class="pane-heading"><h2 id="install-guide-title">アプリをインストール</h2><button id="install-guide-close" aria-label="インストール案内を閉じる">${icon('close')}</button></div><p>ホーム画面から、すぐに作曲を始められます。</p><h3>Android・Chrome・Edge</h3><p>ブラウザーのメニューから「アプリをインストール」または「ホーム画面に追加」を選びます。</p><h3>iPhone・iPad</h3><p>Safariの共有メニューから「ホーム画面に追加」を選びます。</p><p id="install-guide-status" class="muted small"></p></dialog>
     <input id="file-input" type="file" accept=".mid,.midi,.ttropiano,.json" hidden>`;
+    this.home = new StartScreen(this.$('#home'), {command: action => this.homeCommand(action),open: id => this.openRecent(id),list: async () => { await this.storage.flush(); return this.storage.list(); }});
+    if (test) { this.$('#home').hidden = true; this.$('#editor').inert = false; this.$('#editor').setAttribute('aria-hidden','false'); }
+    this.$('#install-guide-close').onclick = () => (this.$('#install-guide') as HTMLDialogElement).close();
     window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); this.installPrompt = e as InstallPrompt; this.renderPwa(); });
     window.addEventListener('appinstalled', () => { this.appInstalled = true; this.installPrompt = undefined; this.renderPwa(); });
     this.ready = this.boot();
@@ -52,7 +61,7 @@ export class App {
     try {
       const last = this.test ? null : localStorage.getItem('ttropiano-last');
       const row = last ? await this.storage.load(last) : null;
-      if (row) { this.session = this.safeSession(row.session, row.project); this.store.replace(row.project); if (row.recovered) this.notify('直前の正常な保存から復元しました。内容を確認してください。'); }
+      if (row) { this.hasProject = true; this.session = this.safeSession(row.session, row.project); this.store.replace(row.project); if (row.recovered) this.notify('直前の正常な保存から復元しました。内容を確認してください。'); }
     } catch (error) { this.notify('端末内の作品を開けませんでした。' + (error as Error).message); }
     this.roll = new PianoRoll(this.$('#roll') as HTMLCanvasElement, this.store, () => this.session, {
       changed: () => { this.saveView(); this.drawOverview(); }, audition: (pitch, velocity, held, keyId) => { if (held || this.editSound) void this.audition(pitch, velocity, held, keyId); }, release: keyId => this.release(keyId), seek: tick => { this.transport.seek(tick); this.roll.invalidate(); this.saveView(); }, dismiss: () => this.dismissFloating(), notify: m => this.notify(m),
@@ -67,8 +76,11 @@ export class App {
     });
     this.storage.addEventListener('status', () => this.renderSave());
     this.transport.addEventListener('state', () => { this.renderControls(); this.roll.playing = this.transport.playing; this.roll.invalidate(); this.saveView(); });
-    this.bind(); this.renderControls(); this.renderQuick(); this.renderSave(); this.drawOverview();
+    this.bind(); this.renderControls(); this.renderQuick(); this.renderSave(); this.drawOverview(); this.home.update(this.hasProject ? this.store.project : null); this.renderPwa();
     if (!this.test) {
+      history.replaceState({...history.state,ttroScreen:'home'},'');
+      window.addEventListener('popstate', event => { if (event.state?.ttroScreen === 'editor' && this.hasProject) this.enterEditor(false); else this.showHome(false); });
+      void this.home.refresh();
       document.addEventListener('visibilitychange', () => { if (document.hidden) { this.roll.cancel(true, true); this.transport.pause(); this.save(); } });
       window.addEventListener('pagehide', () => this.save());
       window.addEventListener('beforeunload', e => { if (this.storage.status !== 'saved') { this.save(); e.preventDefault(); } });
@@ -98,11 +110,12 @@ export class App {
     this.menu = new AppMenu(this.$('#app-menu'), this.$('#menu-button') as HTMLButtonElement, command => { void this.runMenuCommand(command).catch(error => this.notify(error.message)); });
     this.library = new WorkLibrary(this.$('#library-dialog') as HTMLDialogElement, this.storage, {
       current: () => this.store.project, prepare: async () => { this.transport.pause(); this.save(); await this.storage.flush(); },
-      open: (project, fit, session, wanted) => this.openProject(project, fit, session, wanted),
+      open: (project, fit, session, wanted, activate) => this.openProject(project, fit, session, wanted, activate),
       ask: (title, value, confirm) => this.ask(title, value, confirm), rename: name => { this.store.commit('作品名を変更', project => ({...project,name})); },
-      import: () => this.input('#file-input').click(), focus: editor => this.$(editor ? '#roll' : this.$('#works').getClientRects().length ? '#works' : '#menu-button').focus({preventScroll:true}),
+      import: () => this.input('#file-input').click(), focus: editor => { if (this.homeVisible) { void this.home.refresh(); this.$('#home-works').focus({preventScroll:true}); } else this.$(editor ? '#roll' : this.$('#works').getClientRects().length ? '#works' : '#menu-button').focus({preventScroll:true}); },
     });
     const click = (id: string, fn: () => void | Promise<void>) => this.$('#' + id).addEventListener('click', () => { try { const r = fn(); if (r instanceof Promise) r.catch(e => this.notify(e.message)); } catch (e) { this.notify((e as Error).message); } });
+    click('home-button', () => this.showHome());
     click('play', () => this.transport.toggle()); click('stop', () => this.transport.stop()); click('undo', () => this.undo()); click('redo', () => this.store.redo());
     click('pick-select', () => this.roll.pick()); click('quick-listen', () => this.listen(this.selected)); click('quick-duplicate', () => this.runAction('duplicate')); click('quick-group', () => this.runAction('group'));
     click('quick-details', () => { this.pane = this.pane === 'selection' ? null : 'selection'; this.renderPane(); });
@@ -123,11 +136,11 @@ export class App {
   }
   restorePending() { const pending = this.session.pendingEdit; if (pending) this.roll.suspended = { originals: pending.originals, draft: new Map(pending.draft.map(n => [n.id,n])), label: pending.label }; }
   syncPending() { if (this.roll.suspended) this.session.pendingEdit = { originals: this.roll.suspended.originals, draft: [...this.roll.suspended.draft.values()], label: this.roll.suspended.label }; else delete this.session.pendingEdit; }
-  save() { if (!this.roll) return; this.syncPending(); this.savedProposal = this.roll.suspended; clearTimeout(this.lastSaveTimer); this.storage.save(this.store.project, this.session); if (!this.test) try { localStorage.setItem('ttropiano-last', this.store.project.id); } catch {} }
+  save() { if (!this.roll || !this.hasProject) return; this.syncPending(); this.savedProposal = this.roll.suspended; clearTimeout(this.lastSaveTimer); this.storage.save(this.store.project, this.session); if (!this.test) try { localStorage.setItem('ttropiano-last', this.store.project.id); } catch {} }
   saveView() { clearTimeout(this.lastSaveTimer); if (this.roll && this.savedProposal !== this.roll.suspended) this.save(); else this.lastSaveTimer = window.setTimeout(() => this.save(), 180); this.renderPosition(); }
   renderSave() { const el = this.$('#save-status'), s = this.storage.status; el.dataset.state = s; el.textContent = s === 'saved' ? 'この端末に保存済み' : s === 'saving' ? '保存中…' : '保存失敗 · 再試行'; el.title = s === 'error' ? this.storage.error : 'この端末への自動保存'; this.menu?.update(this.store.project.name,el.textContent); if (s === 'error') this.notify(this.storage.error + ' 「曲の設定」から作品ファイルを書き出せます。', 12000); }
   renderControls() {
-    const p = this.store.project; this.$('#project-name').textContent = p.name; this.menu?.update(p.name,this.$('#save-status').textContent ?? '');
+    const p = this.store.project; this.$('#project-name').textContent = p.name; this.menu?.update(p.name,this.$('#save-status').textContent ?? ''); this.home?.update(this.hasProject ? p : null);
     (this.$('#undo') as HTMLButtonElement).disabled = !this.store.past.length; (this.$('#redo') as HTMLButtonElement).disabled = !this.store.future.length;
     this.$('#undo').title = this.store.past.at(-1) ? '元に戻す：' + this.store.past.at(-1)!.label : '元に戻す'; this.$('#redo').title = this.store.future.at(-1) ? 'やり直す：' + this.store.future.at(-1)!.label : 'やり直す';
     this.$('#play').innerHTML = icon(this.transport.playing || this.transport.preparing ? 'pause' : 'play') + `<span>${this.transport.preparing ? '準備中' : this.transport.playing ? '一時停止' : '再生'}</span>`; this.$('#play').setAttribute('aria-label', this.transport.playing ? '一時停止' : this.transport.preparing ? '再生準備を中止' : '再生'); this.$('#play').title = this.$('#play').getAttribute('aria-label')!; this.$('#play').setAttribute('aria-pressed', String(this.transport.playing));
@@ -160,9 +173,10 @@ export class App {
     } catch (e) { if (held && this.held.get(keyId)?.token === token) this.held.delete(keyId); this.notify((e as Error).message); }
   }
   release(keyId?: number) { if (keyId !== undefined) { this.held.get(keyId)?.voice?.release(); this.held.delete(keyId); } else { this.auditionId++; for (const x of this.held.values()) x.voice?.release(); this.held.clear(); } }
-  notify(message: string, duration = 5000) { clearTimeout(this.toastTimer); const el = this.$('#toast'); el.textContent = message; el.title = message; el.hidden = false; this.$('#overview').hidden = true; this.toastTimer = window.setTimeout(() => { el.hidden = true; this.$('#overview').hidden = false; this.drawOverview(); }, duration); }
+  notify(message: string, duration = 5000) { if (this.homeVisible) this.home?.message(message); clearTimeout(this.toastTimer); const el = this.$('#toast'); el.textContent = message; el.title = message; el.hidden = false; this.$('#overview').hidden = true; this.toastTimer = window.setTimeout(() => { el.hidden = true; this.$('#overview').hidden = false; this.drawOverview(); }, duration); }
   dismissFloating() { const el = this.$('#floating'); if (el.matches(':popover-open')) { el.hidePopover(); return true; } if (this.menu?.open) { this.menu.hide(); return true; } return false; }
   async runMenuCommand(command: MenuCommand) {
+    if (command === 'home') { this.showHome(); return; }
     if (command === 'works') { await this.showLibrary(); return; }
     if (command === 'new' || command === 'demo') { this.notify(command === 'new' ? '新しい曲を開いています…' : '作例を開いています…'); await this.openProject(command === 'new' ? newProject() : exampleProject(),command === 'demo'); this.notify(command === 'new' ? '新しい曲を開きました' : '4小節の作例を開きました'); this.$('#roll').focus(); return; }
     if (command === 'rename') { const name = await this.ask('作品名',this.store.project.name); if (name) this.store.commit('作品名を変更',p => ({...p,name})); this.$('#roll').focus(); return; }
@@ -192,7 +206,7 @@ export class App {
       const events = el.querySelector('#time-events')!; events.innerHTML = [...p.tempos.map(t => `<div>第 ${(t.tick / PPQ + 1).toFixed(2)} 拍 · ${Math.round(t.bpm * 100) / 100} BPM ${t.tick ? `<button data-del-tempo="${t.tick}" aria-label="このテンポ変更を削除">×</button>` : ''}</div>`), ...p.meters.map(m => `<div>第 ${(m.tick / PPQ + 1).toFixed(2)} 拍 · ${m.numerator}/${m.denominator} ${m.tick ? `<button data-del-meter="${m.tick}" aria-label="この拍子変更を削除">×</button>` : ''}</div>`)].join('');
       events.querySelectorAll<HTMLButtonElement>('button').forEach(b => b.onclick = () => { const tempo = b.dataset.delTempo; this.store.commit('変更点を削除', p => tempo ? { ...p, tempos: p.tempos.filter(t => t.tick !== Number(tempo)) } : { ...p, meters: p.meters.filter(m => m.tick !== Number(b.dataset.delMeter)) }); el.hidePopover(); });
     }
-    const restore = () => this.$(kind === 'about' ? '#menu-button' : kind === 'help' ? '#help' : kind === 'loop' ? '#loop' : '#settings').focus({preventScroll:true});
+    const restore = () => this.$(this.homeVisible ? '#home-start' : kind === 'about' ? '#menu-button' : kind === 'help' ? '#help' : kind === 'loop' ? '#loop' : '#settings').focus({preventScroll:true});
     el.querySelector<HTMLButtonElement>('[data-close]')!.onclick = () => { el.hidePopover(); restore(); };
     el.onkeydown = event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); el.hidePopover(); restore(); } };
     if (!wasOpen) el.showPopover(); el.focus({preventScroll:true});
@@ -263,6 +277,7 @@ export class App {
 
   paste() { if (!this.clipboard.length) { this.notify('先に音符を選んでコピーしてください。'); return; } const b = bounds(this.clipboard), valid = new Set(this.store.project.parts.map(x => x.id)); const notes = this.clipboard.map(n => ({ ...n, id: uid(), startTick: n.startTick - b.start + Math.round(this.session.cursor), partId: valid.has(n.partId) ? n.partId : this.session.activePart })); this.store.insert(notes); this.roll.select(new Set(notes.map(n => n.id))); }
   shortcut(e: KeyboardEvent) {
+    if (this.homeVisible) return;
     if ((e.target as HTMLElement).closest('input,select,textarea,dialog,[popover]:popover-open')) return;
     if (e.code === 'Space') { e.preventDefault(); void this.transport.toggle(); return; }
     const mod = e.ctrlKey || e.metaKey; if (!mod) return;
@@ -277,13 +292,42 @@ export class App {
     dialog.innerHTML = `<form method="dialog" class="field-stack"><h2>${escape(title)}</h2>${confirm ? `<p>${escape(value)}</p>` : `<input name="value" aria-label="${escape(title)}" value="${escape(value)}" maxlength="100" required>`}<div class="dialog-actions"><button value="cancel" formnovalidate ${confirm ? 'autofocus' : ''}>キャンセル</button><button value="ok" class="${confirm ? 'danger' : 'primary'}">${confirm ? '削除する' : '保存'}</button></div></form>`;
     return new Promise(resolve => { dialog.addEventListener('close', () => resolve(dialog.returnValue === 'ok' ? confirm ? 'ok' : (dialog.querySelector('input')!.value.trim() || null) : null), { once: true }); dialog.returnValue = ''; dialog.showModal(); if (!confirm) { const input = dialog.querySelector('input')!; input.focus(); input.select(); } });
   }
-  async openProject(p: Project, fit = false, session?: Session, wanted: () => boolean = () => true): Promise<boolean> {
+  enterEditor(push = true) {
+    const wasHome = this.homeVisible;
+    this.$('#editor').inert = false; this.$('#editor').setAttribute('aria-hidden','false'); this.$('#home').hidden = true;
+    this.roll.resize(); this.roll.draw(); this.drawOverview();
+    if (wasHome && push && !this.test) history.pushState({ttroScreen:'editor'},'');
+    this.$('#roll').focus({preventScroll:true});
+  }
+  showHome(push = true) {
+    const wasHome = this.homeVisible; this.dismissFloating(); this.roll.cancel(true,true); this.transport.pause(); this.release(); this.save();
+    this.$('#editor').inert = true; this.$('#editor').setAttribute('aria-hidden','true'); this.$('#home').hidden = false;
+    for (const dialog of this.root.querySelectorAll<HTMLDialogElement>('dialog[open]')) dialog.close();
+    this.home.update(this.hasProject ? this.store.project : null); this.renderPwa(); void this.home.refresh();
+    if (!wasHome && push && !this.test) history.pushState({ttroScreen:'home'},'');
+    this.$('#home-start').focus({preventScroll:true});
+  }
+  async homeCommand(action: HomeCommand) {
+    if (action === 'install') { await this.installApp('guide'); return; }
+    if (action === 'help') { this.openFloating('help'); return; }
+    if (action === 'import') { this.input('#file-input').click(); return; }
+    if (action === 'works') { await this.showLibrary(); return; }
+    if (action === 'demo') { await this.openProject(exampleProject(),true); return; }
+    if (action === 'new' && this.hasProject) { await this.openProject(newProject()); return; }
+    this.hasProject = true; this.home.update(this.store.project); this.enterEditor(); this.save();
+  }
+  async openRecent(id: string) {
+    if (this.hasProject && this.store.project.id === id) { this.enterEditor(); return; }
+    const row = await this.storage.load(id); if (!row) throw Error('この作品は見つかりません。作品一覧から確認してください。');
+    await this.openProject(row.project,false,row.session);
+  }
+  async openProject(p: Project, fit = false, session?: Session, wanted: () => boolean = () => true, activate = true): Promise<boolean> {
     validateProject(p); this.transport.pause(); this.transport.preview = undefined; this.release(); this.save(); await this.storage.flush();
     if (!wanted()) return false;
     // Keep the old editor until loading succeeds, then present project + view together.
-    this.roll.suspended = undefined; this.session = this.safeSession(session, p); this.pane = null; this.roll.select(new Set(), false);
+    this.hasProject = true; this.roll.suspended = undefined; this.session = this.safeSession(session, p); this.pane = null; this.roll.select(new Set(), false);
     this.store.replace(p); this.restorePending(); this.renderPane(); this.roll.resize(); if (fit) this.roll.fit();
-    this.roll.draw(); this.drawOverview(); this.save(); return true;
+    this.roll.draw(); this.drawOverview(); this.save(); if (activate) this.enterEditor(); return true;
   }
   async showLibrary() { this.dismissFloating(); await this.library.show(); }
   async loadFile(file: File) {
@@ -295,23 +339,25 @@ export class App {
   downloadMidi() { this.download(exportMidi(this.store.project) as unknown as BlobPart, 'audio/midi', '.mid'); }
   downloadProject() { this.syncPending(); this.download(JSON.stringify({ format: 'TtroPiano', project: this.store.project, session: this.session }), 'application/json', '.ttropiano'); }
   renderPwa() {
-    const button = this.root.querySelector<HTMLButtonElement>('#install-app'), status = this.root.querySelector('#pwa-readiness'); if (!button || !status) return;
+    const button = this.root.querySelector<HTMLButtonElement>('#install-app'), status = this.root.querySelector('#pwa-readiness');
     const standalone = matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
-    button.disabled = standalone || this.appInstalled; button.textContent = standalone ? 'アプリとして起動中' : this.appInstalled ? 'ホーム画面に追加済み' : 'ホーム画面に追加';
-    status.textContent = this.offlineReady ? 'オフライン準備完了 · ピアノ音源も保存済み' : this.offlineError || ('serviceWorker' in navigator && import.meta.env.PROD ? 'オフライン準備中 · 初回は接続を保ってください' : 'オンラインで利用できます');
+    if (button) { button.disabled = standalone || this.appInstalled; button.textContent = standalone ? 'アプリとして起動中' : this.appInstalled ? 'ホーム画面に追加済み' : 'ホーム画面に追加'; }
+    const message = this.offlineReady ? 'オフライン準備完了 · ピアノ音源も保存済み' : this.offlineError || ('serviceWorker' in navigator && import.meta.env.PROD ? 'オフライン準備中 · 初回は接続を保ってください' : 'オンラインで利用できます');
+    if (status) status.textContent = message; this.home?.pwa(message,standalone || this.appInstalled); this.$('#install-guide-status').textContent = message;
   }
-  async installApp() {
+  async installApp(fallback: 'settings' | 'guide' = 'settings') {
     const prompt = this.installPrompt;
-    if (!prompt) { this.root.querySelector<HTMLDetailsElement>('#install-help')!.open = true; return; }
+    const guide = () => { if (fallback === 'settings') { const help = this.root.querySelector<HTMLDetailsElement>('#install-help'); if (help) { help.open = true; return; } } const dialog = this.$('#install-guide') as HTMLDialogElement; this.renderPwa(); if (!dialog.open) dialog.showModal(); };
+    if (!prompt) { guide(); return; }
     this.installPrompt = undefined;
     try { await prompt.prompt(); await prompt.userChoice; }
-    catch { this.root.querySelector<HTMLDetailsElement>('#install-help')!.open = true; }
+    catch { guide(); }
     this.renderPwa();
   }
   async offlineStatus() {
     const registration = await navigator.serviceWorker.ready, worker = registration.active; if (!worker) return;
     const channel = new MessageChannel(), timeout = window.setTimeout(() => { channel.port1.close(); this.offlineError = 'オフライン準備を確認できません。接続中は編集できます。'; this.renderPwa(); }, 5000);
-    channel.port1.onmessage = e => { clearTimeout(timeout); channel.port1.close(); this.offlineReady = e.data.ready === true; if (this.offlineReady) { this.offlineError = ''; this.notify('オフラインの準備ができました。ピアノ音源もこの端末に保存済みです。'); } else this.offlineError = 'オフライン準備が未完了です。接続中にアプリを開き直してください。'; this.renderPwa(); }; worker.postMessage({ type: 'offline-status' }, [channel.port2]);
+    channel.port1.onmessage = e => { clearTimeout(timeout); channel.port1.close(); this.offlineReady = e.data.ready === true; if (this.offlineReady) { this.offlineError = ''; if (!this.homeVisible) this.notify('オフラインの準備ができました。ピアノ音源もこの端末に保存済みです。'); } else this.offlineError = 'オフライン準備が未完了です。接続中にアプリを開き直してください。'; this.renderPwa(); }; worker.postMessage({ type: 'offline-status' }, [channel.port2]);
   }
 }
 const root = document.querySelector<HTMLElement>('#app');

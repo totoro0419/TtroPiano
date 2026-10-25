@@ -5,13 +5,19 @@ import { icon } from './icons';
 interface LibraryActions {
   current(): Project;
   prepare(): Promise<void>;
-  open(project: Project, fit: boolean, session?: Session, wanted?: () => boolean): Promise<boolean>;
+  open(project: Project, fit: boolean, session?: Session, wanted?: () => boolean, activate?: boolean): Promise<boolean>;
   ask(title: string, value: string, confirm?: boolean): Promise<string | null>;
   rename(name: string): void;
   import(): void;
   focus(editor: boolean): void;
 }
 const escape = (value: string) => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+
+export function drawWorkThumbnail(canvas: HTMLCanvasElement, notes: Work['preview']) {
+  const c = canvas.getContext('2d')!; c.fillStyle = '#f4f1f9'; c.fillRect(0,0,500,160); if (!notes.length) return;
+  const b = bounds(notes), span = Math.max(b.end,PPQ*16); c.fillStyle = '#9475bf';
+  for (const n of notes) c.fillRect(16+n.startTick/span*468,140-(n.pitch-b.low)/Math.max(24,b.high-b.low+3)*120,Math.max(3,n.durationTick/span*468),5);
+}
 
 /** Keep one modal and its controls mounted while storage work and card updates run. */
 export class WorkLibrary {
@@ -73,9 +79,7 @@ export class WorkLibrary {
     this.status.textContent = term ? `${this.rows.length}作品中 ${rows.length}作品` : `${rows.length}作品`;
   }
   thumbnail(canvas: HTMLCanvasElement, notes: Work['preview']) {
-    const c = canvas.getContext('2d')!; c.fillStyle = '#f4f1f9'; c.fillRect(0,0,500,160); if (!notes.length) return;
-    const b = bounds(notes), span = Math.max(b.end,PPQ*16); c.fillStyle = '#9475bf';
-    for (const n of notes) c.fillRect(16+n.startTick/span*468,140-(n.pitch-b.low)/Math.max(24,b.high-b.low+3)*120,Math.max(3,n.durationTick/span*468),5);
+    drawWorkThumbnail(canvas,notes);
   }
   async command(button: HTMLButtonElement) {
     const data = button.dataset;
@@ -91,7 +95,7 @@ export class WorkLibrary {
       else if (data.open) { this.status.textContent = '作品を開いています…'; const row = await this.storage.load(data.open); if (!wanted()) return; if (!row) throw Error('この作品は見つかりません。もう一度一覧を読み込んでください。'); if (await this.actions.open(row.project,false,row.session,wanted) && wanted()) this.dialog.close('editor'); }
       else if (data.copy) { const row = await this.storage.load(data.copy); if (!wanted()) return; if (!row) throw Error('複製する作品が見つかりません。'); const copy = {...row.project,id:uid(),name:row.project.name.slice(0,90)+' のコピー',revision:0,updatedAt:new Date().toISOString()}; this.storage.save(copy,row.session); await this.storage.flush(); await this.refresh(generation,{id:copy.id,action:'open'}); }
       else if (data.rename) { const row = await this.storage.load(data.rename); if (!wanted() || !row) return; const name = await this.actions.ask('作品名',row.project.name); if (!wanted() || !name) return; if (row.project.id === this.actions.current().id) this.actions.rename(name); else this.storage.save({...row.project,name,revision:row.project.revision+1,updatedAt:new Date().toISOString()},row.session); await this.storage.flush(); await this.refresh(generation,{id:row.project.id,action:'rename'}); }
-      else if (data.delete) { const row = this.rows.find(row => row.id === data.delete); if (!row) return; if (!await this.actions.ask('作品を削除しますか？',`「${row.name}」をこの端末から削除します。元に戻せません。`,true) || !wanted()) return; if (row.id === this.actions.current().id && !await this.actions.open(newProject(),false,undefined,wanted)) return; await this.storage.delete(row.id); await this.refresh(generation,{id:this.actions.current().id,action:'open'}); }
+      else if (data.delete) { const row = this.rows.find(row => row.id === data.delete); if (!row) return; if (!await this.actions.ask('作品を削除しますか？',`「${row.name}」をこの端末から削除します。元に戻せません。`,true) || !wanted()) return; if (row.id === this.actions.current().id && !await this.actions.open(newProject(),false,undefined,wanted,false)) return; await this.storage.delete(row.id); await this.refresh(generation,{id:this.actions.current().id,action:'open'}); }
     } catch (error) { if (wanted()) this.fail(error); }
     finally { if (wanted()) this.setBusy(false); }
   }

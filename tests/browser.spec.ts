@@ -1,6 +1,14 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { importMidi } from '../src/midi';
+
+async function enterFromHome(page: Page) {
+  await expect(page.locator('#home')).toBeVisible();
+  await expect(page.locator('#home-start')).toBeEnabled();
+  await page.locator('#home-start').click();
+  await expect(page.locator('#home')).toBeHidden();
+}
+async function openEditor(page: Page) { await page.goto('/'); await enterFromHome(page); }
 
 test('production browser: 33 integrated scenarios, actual PCM, 10,000 notes', async ({ page }, testInfo) => {
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
@@ -14,7 +22,7 @@ test('production browser: 33 integrated scenarios, actual PCM, 10,000 notes', as
 });
 
 test('native UI touch, saving, MIDI download, project download and MIDI file input', async ({ page }, testInfo) => {
-  await page.goto('/'); const canvas = page.locator('#roll'); await expect(canvas).toBeVisible();
+  await openEditor(page); const canvas = page.locator('#roll'); await expect(canvas).toBeVisible();
   const r = (await canvas.boundingBox())!;
   await page.touchscreen.tap(r.x + 170, r.y + 220); await page.touchscreen.tap(r.x + 226, r.y + 180);
   await expect(page.locator('#save-status')).toHaveText('この端末に保存済み');
@@ -31,16 +39,16 @@ test('native UI touch, saving, MIDI download, project download and MIDI file inp
   await page.getByRole('button', { name: '作品一覧を閉じる' }).click();
   await page.setViewportSize({ width: 390, height: 844 }); await expect(canvas).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-  await page.reload(); await expect(page.locator('#project-name')).toHaveText('CI ピアノ曲');
+  await page.reload(); await enterFromHome(page); await expect(page.locator('#project-name')).toHaveText('CI ピアノ曲');
   await testInfo.attach('midi-file', { path: midiPath, contentType: 'audio/midi' });
   await testInfo.attach('project-file', { path: backupPath, contentType: 'application/json' });
 });
 
 test('real offline: cached app, saved composition and piano samples survive network loss', async ({ page, context }) => {
-  await page.goto('/'); await page.locator('#roll').click({ position: { x: 170, y: 220 } });
+  await openEditor(page); await page.locator('#roll').click({ position: { x: 170, y: 220 } });
   await expect(page.locator('#save-status')).toHaveText('この端末に保存済み');
   await page.evaluate(async () => { await navigator.serviceWorker.ready; if (!navigator.serviceWorker.controller) await new Promise<void>(resolve => navigator.serviceWorker.addEventListener('controllerchange', () => resolve(), { once: true })); });
-  await context.setOffline(true); await page.reload(); await expect(page.locator('#roll')).toBeVisible();
+  await context.setOffline(true); await page.reload(); await enterFromHome(page); await expect(page.locator('#roll')).toBeVisible();
   const cachedPwa = await page.evaluate(async () => { const url=document.querySelector<HTMLLinkElement>('link[rel=manifest]')!.href,manifest=await (await fetch(url)).json();return {id:new URL(manifest.id,url).pathname,icons:await Promise.all(manifest.icons.map(async (icon:{src:string})=>(await (await fetch(new URL(icon.src,url))).arrayBuffer()).byteLength))}; });
   expect(cachedPwa.id).toBe('/'); expect(cachedPwa.icons.every((bytes:number)=>bytes>0)).toBe(true);
   await page.locator('#roll').click({ position: { x: 226, y: 180 } }); await expect(page.locator('#save-status')).toHaveText('この端末に保存済み');
@@ -49,7 +57,7 @@ test('real offline: cached app, saved composition and piano samples survive netw
 });
 
 test('pedal tail outlives the final written note without early transport stop', async ({ page }) => {
-  await page.goto('/'); const roll = page.locator('#roll');
+  await openEditor(page); const roll = page.locator('#roll');
   await roll.click({ position: { x: 80, y: 220 } });
   await page.locator('#tempo').click(); await page.locator('#settings-form input[name="bpm"]').fill('300'); await page.getByRole('button', { name: '適用', exact: true }).click();
   await page.locator('#expression').click(); await page.getByRole('button', { name: 'ここで踏む', exact: true }).click();
@@ -78,7 +86,7 @@ test('before/after: 15 identical composition scenarios, 3 paired runs', async ({
 });
 
 test('native touch: independent keyboard chord and interrupted note drag', async ({ page, context }) => {
-  await page.goto('/'); const canvas = page.locator('#roll'), r = (await canvas.boundingBox())!;
+  await openEditor(page); const canvas = page.locator('#roll'), r = (await canvas.boundingBox())!;
   const cdp = await context.newCDPSession(page);
   const send = (type: 'touchStart' | 'touchMove' | 'touchEnd' | 'touchCancel', points: { id: number; x: number; y: number }[]) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points });
   const a = { id: 11, x: r.x+24, y: r.y+RULER+240 }, b = { id: 12, x: r.x+24, y: r.y+RULER+160 }, c = { id: 13, x: r.x+24, y: r.y+RULER+100 };
@@ -93,14 +101,14 @@ test('native touch: independent keyboard chord and interrupted note drag', async
   await expect.poll(()=>keyColor(moved)).not.toEqual([255,255,255]);
   const second = {id:2,x:r.x+450,y:r.y+300}; await send('touchStart',[moved,second]); await send('touchEnd',[second]); await send('touchEnd',[]);
   await expect(page.locator('#pending-edit')).toBeVisible(); await expect(page.locator('#selection-count')).toHaveText('1音');
-  await expect(page.locator('#save-status')).toHaveText('この端末に保存済み'); await page.reload(); await expect(page.locator('#pending-edit')).toBeVisible();
+  await expect(page.locator('#save-status')).toHaveText('この端末に保存済み'); await page.reload(); await enterFromHome(page); await expect(page.locator('#pending-edit')).toBeVisible();
   await page.locator('#apply-pending').click(); await expect(page.locator('#pending-edit')).toBeHidden();
   await page.locator('#undo').click(); await expect(page.locator('#selection-count')).toHaveText('1音');
 });
 const RULER = 36;
 
 test('selection keeps canvas and dock stable across tablet orientations; numeric keyboard route remains', async ({ page }) => {
-  await page.goto('/'); const roll=page.locator('#roll');
+  await openEditor(page); const roll=page.locator('#roll');
   for (const [width,height] of [[1024,768],[768,1024],[834,1112],[1366,768],[390,844],[320,740]]) {
     await page.setViewportSize({width,height}); const before=(await roll.boundingBox())!;
     await page.locator('#stop').click(); await roll.press('Escape');
@@ -118,7 +126,7 @@ test('selection keeps canvas and dock stable across tablet orientations; numeric
 
 
 test('PWA manifest, decoded install icons, readiness and explicit install entry', async ({page},testInfo) => {
-  await page.goto('/');await expect(page.locator('#roll')).toBeVisible();
+  await openEditor(page);await expect(page.locator('#roll')).toBeVisible();
   const manifest=await page.evaluate(async()=>{const url=document.querySelector<HTMLLinkElement>('link[rel=manifest]')!.href,m=await(await fetch(url)).json();const images=[];for(const icon of m.icons){const image=new Image();image.src=new URL(icon.src,url).href;await image.decode();images.push({sizes:icon.sizes,width:image.naturalWidth,height:image.naturalHeight});}return {id:new URL(m.id,url).pathname,start:new URL(m.start_url,url).pathname,scope:new URL(m.scope,url).pathname,display:m.display,images};});
   expect(manifest.id).toBe('/');expect(manifest.start).toBe('/');expect(manifest.scope).toBe('/');expect(manifest.display).toBe('standalone');expect(manifest.images).toEqual([{sizes:'192x192',width:192,height:192},{sizes:'512x512',width:512,height:512}]);
   await page.locator('#settings').click();await expect(page.locator('#pwa-readiness')).toContainText('オフライン準備完了',{timeout:15000});
@@ -166,13 +174,13 @@ test('before/after: resized editor has no cleared presentation and library refre
 });
 
 test('app menu: keyboard, outside dismiss, direct routes, backup and unchanged canvas allocation', async ({page},testInfo) => {
-  await page.goto('/'); const roll=page.locator('#roll'); await roll.click({position:{x:170,y:220}});
+  await openEditor(page); const roll=page.locator('#roll'); await roll.click({position:{x:170,y:220}});
   const box=(await roll.boundingBox())!; await page.locator('#menu-button').click();
   await expect(page.locator('#app-menu')).toBeVisible(); await expect(page.locator('#menu-button')).toHaveAttribute('aria-expanded','true');
-  await expect(page.locator('[data-command="works"]')).toBeFocused(); await page.locator('[data-command="works"]').press('ArrowDown'); await expect(page.locator('[data-command="new"]')).toBeFocused();
+  await expect(page.locator('[data-command="home"]')).toBeFocused(); await page.locator('[data-command="home"]').press('ArrowDown'); await expect(page.locator('[data-command="works"]')).toBeFocused(); await page.locator('[data-command="works"]').press('ArrowDown'); await expect(page.locator('[data-command="new"]')).toBeFocused();
   await page.locator('[data-command="new"]').press('End'); await expect(page.locator('[data-menu-close]')).toBeFocused(); await page.locator('[data-menu-close]').press('Escape');
   await expect(page.locator('#app-menu')).toBeHidden(); await expect(page.locator('#menu-button')).toBeFocused();
-  await page.locator('#menu-button').press('ArrowDown'); await page.locator('[data-command="works"]').press('Tab'); await expect(page.locator('#app-menu')).toBeHidden(); await expect(page.locator('#works')).toBeFocused();
+  await page.locator('#menu-button').press('ArrowDown'); await page.locator('[data-command="home"]').press('Tab'); await expect(page.locator('#app-menu')).toBeHidden(); await expect(page.locator('#works')).toBeFocused();
   await page.locator('#menu-button').click(); await roll.click({position:{x:400,y:300}}); await expect(page.locator('#app-menu')).toBeHidden();
   await roll.press('ControlOrMeta+a'); await expect(page.locator('#selection-count')).toHaveText('1音'); expect(await roll.boundingBox()).toEqual(box);
   await page.locator('#menu-button').click(); await page.getByRole('menuitem',{name:'曲の設定',exact:true}).click(); await expect(page.locator('#settings-form')).toBeVisible(); await page.getByRole('button',{name:'閉じる',exact:true}).click();
@@ -185,7 +193,7 @@ test('app menu: keyboard, outside dismiss, direct routes, backup and unchanged c
 });
 
 test('library: search, sort, keyed refresh, rename, duplicate and project handoff stay coherent', async ({page}) => {
-  await page.goto('/'); await page.locator('#roll').click({position:{x:170,y:220}}); await page.locator('#works').click();
+  await openEditor(page); await page.locator('#roll').click({position:{x:170,y:220}}); await page.locator('#works').click();
   const dialog=page.locator('#library-dialog'); await expect(dialog).toHaveAttribute('aria-busy','false'); await expect(dialog.locator('.work-card')).toHaveCount(1);
   await page.evaluate(()=>{Object.assign(window,{originalSearch:document.querySelector('#work-search'),libraryCloseCount:0});document.querySelector('#library-dialog')!.addEventListener('close',()=> (window as any).libraryCloseCount++);});
   await page.locator('#work-search').fill('無題'); await dialog.locator('[data-copy]').click(); await expect(dialog.locator('.work-card')).toHaveCount(2); await expect(dialog).toHaveAttribute('aria-busy','false');
@@ -194,12 +202,12 @@ test('library: search, sort, keyed refresh, rename, duplicate and project handof
   await page.locator('#work-sort').selectOption('name'); const names=await dialog.locator('.work-card strong').allTextContents(); expect(names).toEqual([...names].sort((a,b)=>a.localeCompare(b,'ja')));
   await page.locator('#work-search').fill('存在しない作品'); await expect(dialog.locator('.work-card')).toHaveCount(0); await expect(dialog.locator('.library-empty')).toBeVisible(); await dialog.locator('[data-clear]').click(); await expect(dialog.locator('.work-card')).toHaveCount(2);
   const target=dialog.locator('.work-card').filter({hasText:'無題のメロディー 改名'}); await target.locator('[data-open]').click(); await expect(dialog).toBeHidden(); await expect(page.locator('#project-name')).toHaveText('無題のメロディー 改名'); await expect(page.locator('#roll')).toBeFocused();
-  await page.reload(); await expect(page.locator('#project-name')).toHaveText('無題のメロディー 改名');
+  await page.reload(); await enterFromHome(page); await expect(page.locator('#project-name')).toHaveText('無題のメロディー 改名');
   await page.locator('#works').click(); await expect(dialog).toHaveAttribute('aria-busy','false');
   await dialog.locator('.work-card[data-current="true"] [data-delete]').click(); await page.getByRole('button',{name:'キャンセル',exact:true}).click(); await expect(dialog.locator('.work-card')).toHaveCount(2);
   await dialog.locator('.work-card[data-current="true"] [data-delete]').click(); await page.getByRole('button',{name:'削除する',exact:true}).click(); await expect(dialog).toHaveAttribute('aria-busy','false');
   await expect(dialog.locator('.work-card')).toHaveCount(2); await expect(dialog.locator('.work-card').filter({hasText:'無題のメロディー 改名'})).toHaveCount(0);
-  await page.getByRole('button',{name:'作品一覧を閉じる',exact:true}).click(); await page.reload(); await expect(page.locator('#project-name')).toHaveText('無題のピアノ曲');
+  await page.getByRole('button',{name:'作品一覧を閉じる',exact:true}).click(); await page.reload(); await enterFromHome(page); await expect(page.locator('#project-name')).toHaveText('無題のピアノ曲');
   await page.locator('#works').click(); await expect(dialog).toHaveAttribute('aria-busy','false'); await expect(dialog.locator('.work-card').filter({hasText:'無題のメロディー 改名'})).toHaveCount(0);
 });
 
@@ -213,7 +221,7 @@ test('library: delayed loading can be dismissed; failed list retries without los
     } as typeof original;
     Object.assign(window,{failList:true});
   });
-  await page.goto('/'); await page.locator('#roll').click({position:{x:170,y:220}}); await page.locator('#works').click();
+  await openEditor(page); await page.locator('#roll').click({position:{x:170,y:220}}); await page.locator('#works').click();
   const dialog=page.locator('#library-dialog'); await expect(dialog.locator('.library-error')).toBeVisible(); await expect(dialog).toHaveAttribute('aria-busy','false');
   await page.evaluate(()=>(window as any).failList=false); await dialog.locator('[data-retry]').click(); await expect(dialog.locator('.work-card')).toHaveCount(1); await expect(dialog.locator('.library-error')).toBeHidden();
   await dialog.locator('[data-copy]').click(); await expect(dialog.locator('.work-card')).toHaveCount(2); await expect(dialog).toHaveAttribute('aria-busy','false');
@@ -222,11 +230,11 @@ test('library: delayed loading can be dismissed; failed list retries without los
 });
 
 test('navigation adapts to touch, narrow windows and large text without covering controls', async ({page},testInfo) => {
-  await page.goto('/'); const measurements=[];
+  await openEditor(page); const measurements=[];
   for (const [width,height] of [[320,740],[390,844],[768,1024],[1024,768],[1366,768]]) {
     await page.setViewportSize({width,height}); await page.locator('#menu-button').click(); const menu=(await page.locator('#app-menu').boundingBox())!;
     expect(menu.x).toBeGreaterThanOrEqual(0);expect(menu.x+menu.width).toBeLessThanOrEqual(width);expect(menu.y+menu.height).toBeLessThanOrEqual(height);
-    await expect(page.locator('[data-command="works"]')).toBeFocused();await page.locator('[data-command="works"]').press('End');await expect(page.locator('[data-menu-close]')).toBeInViewport(); await page.locator('[data-menu-close]').press('Escape');
+    await expect(page.locator('[data-command="home"]')).toBeFocused();await page.locator('[data-command="home"]').press('End');await expect(page.locator('[data-menu-close]')).toBeInViewport(); await page.locator('[data-menu-close]').press('Escape');
     await page.locator('#menu-button').click(); await page.locator('[data-command="works"]').click(); await expect(page.locator('#library-dialog')).toHaveAttribute('aria-busy','false'); const library=(await page.locator('#library-dialog').boundingBox())!;
     expect(library.x).toBeGreaterThanOrEqual(0);expect(library.x+library.width).toBeLessThanOrEqual(width);expect(library.y+library.height).toBeLessThanOrEqual(height);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
@@ -236,4 +244,55 @@ test('navigation adapts to touch, narrow windows and large text without covering
   await page.locator('#menu-button').click(); await page.locator('[data-command="help"]').click(); await expect(page.locator('.help-copy')).toBeVisible(); await page.getByRole('button',{name:'閉じる',exact:true}).click();
   await page.locator('#menu-button').click(); await page.locator('[data-command="works"]').click(); await expect(page.locator('#library-dialog')).toHaveAttribute('aria-busy','false'); expect(await page.locator('#library-dialog').evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
   await testInfo.attach('navigation-layout.json',{body:JSON.stringify({measurements,largeControlText:'PASS',physicalTablet:'未確認'},null,2),contentType:'application/json'});
+});
+
+test('start page: every launch starts at home; resume retains notes, canvas view, undo and browser Back', async ({page}) => {
+  await page.goto('/'); await expect(page.locator('#home')).toBeVisible(); await expect(page.locator('#editor')).toHaveAttribute('aria-hidden','true'); await expect(page.locator('#home-start')).toBeEnabled();
+  await expect(page.locator('#home-start-title')).toHaveText('新しい曲をつくる'); await expect(page.locator('#home-install')).toBeVisible();
+  await page.keyboard.press('Space'); await expect(page.locator('#play')).toHaveAttribute('aria-pressed','false');
+  await page.locator('#home-works').click(); await expect(page.locator('#library-dialog')).toHaveAttribute('aria-busy','false'); await expect(page.locator('.work-card')).toHaveCount(0); await page.getByRole('button',{name:'作品一覧を閉じる',exact:true}).click();
+  await expect(page.locator('#home-works')).toBeFocused(); await enterFromHome(page); const roll=page.locator('#roll');
+  await roll.click({position:{x:170,y:220}}); await roll.click({position:{x:226,y:180}}); await expect(page.locator('#save-status')).toHaveText('この端末に保存済み');
+  await page.locator('#rename').click();await page.getByRole('textbox',{name:'作品名',exact:true}).fill('つづきのメロディー');await page.getByRole('button',{name:'保存',exact:true}).click();
+  const r=(await roll.boundingBox())!; await page.mouse.move(r.x+440,r.y+300); await page.mouse.wheel(120,40);
+  const pixels=()=>roll.evaluate(el=>new Promise<string>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve((el as HTMLCanvasElement).toDataURL())))));
+  const before=await pixels(); await page.locator('#menu-button').click(); await page.getByRole('menuitem',{name:'スタート画面',exact:true}).click();
+  await expect(page.locator('#home')).toBeVisible(); await expect(page.locator('#home-start-title')).toHaveText('つづきから'); await expect(page.locator('#home-current')).toContainText('つづきのメロディー · 2音'); await expect(page.locator('.home-work')).toHaveCount(1);
+  await enterFromHome(page); expect(await pixels()).toBe(before); await page.locator('#undo').click(); await expect(page.locator('#project-name')).toHaveText('無題のピアノ曲'); await page.locator('#redo').click(); await expect(page.locator('#project-name')).toHaveText('つづきのメロディー');
+  await page.goBack(); await expect(page.locator('#home')).toBeVisible(); await page.goForward(); await expect(page.locator('#home')).toBeHidden();
+  await expect(page.locator('#save-status')).toHaveText('この端末に保存済み'); await page.reload(); await expect(page.locator('#home')).toBeVisible(); await expect(page.locator('#home-current')).toContainText('つづきのメロディー · 2音'); await enterFromHome(page); await roll.press('ControlOrMeta+a'); await expect(page.locator('#selection-count')).toHaveText('2音');
+});
+
+test('home install: explicit prompt, cancellation, manual instructions and installed state', async ({page},testInfo) => {
+  await page.goto('/'); await expect(page.locator('#home-start')).toBeEnabled();
+  await page.evaluate(()=>{Object.assign(window,{homeInstallPrompts:0});const e=new Event('beforeinstallprompt',{cancelable:true});Object.assign(e,{prompt:async()=>{(window as any).homeInstallPrompts++;},userChoice:Promise.resolve({outcome:'dismissed'})});window.dispatchEvent(e);});
+  expect(await page.evaluate(()=>(window as any).homeInstallPrompts)).toBe(0); await page.locator('#home-install').click(); expect(await page.evaluate(()=>(window as any).homeInstallPrompts)).toBe(1); await expect(page.locator('#home-install')).toBeVisible();
+  await page.locator('#home-install').click(); await expect(page.locator('#install-guide')).toBeVisible(); await expect(page.locator('#install-guide')).toContainText('Safari'); await expect(page.locator('#home')).toBeVisible();
+  await page.getByRole('button',{name:'インストール案内を閉じる',exact:true}).click(); await expect(page.locator('#home-install')).toBeFocused();
+  await page.evaluate(()=>window.dispatchEvent(new Event('appinstalled'))); await expect(page.locator('#home-install')).toBeHidden(); await expect(page.locator('#home-installed')).toHaveText('アプリとして利用中');
+  await testInfo.attach('home-install.json',{body:JSON.stringify({automaticPrompts:0,explicitPrompt:'PASS',cancelKeepsHome:'PASS',fallbackGuide:'PASS',installedState:'test event only',actualOsInstall:'未確認'},null,2),contentType:'application/json'});
+});
+
+test('home: recent works, new project, real file import and no empty work on untouched launch', async ({page}) => {
+  await page.goto('/'); await expect(page.locator('#home-start')).toBeEnabled(); await page.reload(); await expect(page.locator('#home-start')).toBeEnabled(); await page.locator('#home-works').click(); await expect(page.locator('#library-dialog')).toHaveAttribute('aria-busy','false'); await expect(page.locator('.work-card')).toHaveCount(0); await page.getByRole('button',{name:'作品一覧を閉じる',exact:true}).click();
+  await page.locator('[data-home="demo"]').click(); await expect(page.locator('#home')).toBeHidden(); await expect(page.locator('#project-name')).toHaveText('ひかりのスケッチ');
+  await page.locator('#menu-button').click(); await page.locator('[data-command="home"]').click(); await expect(page.locator('.home-work')).toHaveCount(1); await page.locator('#home-new').click(); await expect(page.locator('#home')).toBeHidden(); await expect(page.locator('#project-name')).toHaveText('無題のピアノ曲');
+  await page.locator('#menu-button').click(); await page.locator('[data-command="home"]').click(); await expect(page.locator('.home-work')).toHaveCount(2); await page.locator('.home-work').filter({hasText:'ひかりのスケッチ'}).click(); await expect(page.locator('#project-name')).toHaveText('ひかりのスケッチ');
+  await page.locator('#menu-button').click(); await page.locator('[data-command="home"]').click();
+  const chooser=page.waitForEvent('filechooser'); await page.locator('[data-home="import"]').click(); const file=await chooser;
+  const {newProject}=await import('../src/model'); const project=newProject(); project.name='スタートから読み込む曲';project.notes=[{id:'home-import-note',partId:project.parts[0].id,pitch:60,startTick:0,durationTick:960,velocity:80}];
+  await file.setFiles({name:'home-import.ttropiano',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({project}))}); await expect(page.locator('#home')).toBeHidden(); await expect(page.locator('#project-name')).toHaveText('スタートから読み込む曲'); await page.locator('#roll').press('ControlOrMeta+a'); await expect(page.locator('#selection-count')).toHaveText('1音');
+});
+
+test('home: tablet and phone layouts, keyboard focus, large text and long titles', async ({page},testInfo) => {
+  await page.goto('/'); await expect(page.locator('#home-start')).toBeEnabled(); const layouts=[];
+  for(const [width,height] of [[320,740],[390,844],[768,1024],[1024,768],[1366,768]]) {
+    await page.setViewportSize({width,height}); const install=(await page.locator('#home-install').boundingBox())!, primary=(await page.locator('#home-start').boundingBox())!;
+    expect(install.x).toBeGreaterThanOrEqual(0);expect(install.x+install.width).toBeLessThanOrEqual(width);expect(primary.x+primary.width).toBeLessThanOrEqual(width);
+    expect(await page.locator('#home').evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);layouts.push({width,height,install,primary});
+  }
+  await page.setViewportSize({width:320,height:740});await page.addStyleTag({content:'.home-screen button,.home-header-actions>span{font-size:24px!important}.home-primary small{font-size:22px!important}'});expect(await page.locator('#home').evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
+  await page.locator('#home-install').focus(); await page.locator('#home-install').press('Tab'); await expect(page.locator('.home-header-actions [data-home="help"]')).toBeFocused();await page.locator('.home-header-actions [data-home="help"]').press('Tab');await expect(page.locator('#home-start')).toBeFocused();
+  await page.locator('#home-start').press('Enter');await page.locator('#rename').click();const longTitle='長い作品名'.repeat(15);await page.getByRole('textbox',{name:'作品名',exact:true}).fill(longTitle);await page.getByRole('button',{name:'保存',exact:true}).click();await page.locator('#menu-button').click();await page.locator('[data-command="home"]').click();await expect(page.locator('#home-current')).toContainText(longTitle);await expect(page.locator('.home-work')).toHaveCount(1);expect(await page.locator('#home').evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
+  await testInfo.attach('home-layout.json',{body:JSON.stringify({layouts,largeControlText:'PASS',physicalTablet:'未確認'},null,2),contentType:'application/json'});
 });
