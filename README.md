@@ -37,6 +37,7 @@
 | [12 改善前後の検証](docs/12_DIRECT_VALIDATION.md) | 操作数・時間・回帰・実機未確認 |
 | [13 公開・PWA](docs/13_PUBLICATION_PWA.md) | ログイン不要の公開、ホーム画面追加、オフライン |
 | [14 GitHub Pages](docs/14_GITHUB_PAGES.md) | GitHubの公開ブランチ・有効化・配信確認の状態 |
+| [15 メニューと画面切り替え](docs/15_APP_SHELL.md) | ちらつき対策、作品一覧、アプリの導線と検証 |
 
 ## 起動・ビルド
 
@@ -54,7 +55,7 @@ npm run build  # 音源hash検証、型確認、本番dist、オフラインキ�
 npm run preview
 ```
 
-CIでは `npx playwright install --with-deps chromium` → `node scripts/prepare-ux-baseline.mjs` → `npm run test:browser` で本番ブラウザー試験も実行する。
+CIでは `npx playwright install --with-deps chromium` → `node scripts/prepare-ux-baseline.mjs` → `node scripts/prepare-shell-baseline.mjs` → `npm run test:browser` で本番ブラウザー試験も実行する。作曲操作はPR #1、画面切り替えは初回公開版を固定して比較する。
 
 `/qa/` はブラウザー統合試験画面。「検証を実行」で合成タッチ、実サンプル出力、Worker保存、MIDI往復、10,000音を確認しJSONを取得できる。テスト用作品だけを生成・除去する。再実行時はページを再読込する。
 
@@ -68,6 +69,8 @@ CIでは `npx playwright install --with-deps chromium` → `node scripts/prepare
 4. 自動保存の表示を確認し、次回は同じ場所から再開。「曲の設定」からMIDIまたは完全な作品ファイルを出力。
 
 置いた音・動かした音はそのまま選択される。既存音は「選ぶ」→タップでも選べる。短い音符は左の丸で移動、右の丸で伸縮。「詳細」は必要なときだけ開く。長押しの既存経路も使える。「曲の設定→作例を開く」で4小節の曲も試せる。
+
+左上の「メニュー」には作品一覧・新しい曲・ファイル入出力・設定・ホーム画面追加・操作のヒントをまとめた。作品一覧では名前検索と並び替えができ、「編集中」の作品を確認できる。改名や複製で一覧を閉じ直す必要はない。
 
 ## 配布
 

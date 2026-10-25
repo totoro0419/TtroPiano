@@ -149,11 +149,17 @@ test('before/after: resized editor has no cleared presentation and library refre
     await page.locator('#roll').click({position:{x:170,y:220}}); await expect(page.locator('#save-status')).toHaveText('この端末に保存済み');
     await page.locator('#works').click(); await expect(page.locator('#library-dialog .work-card')).toHaveCount(1);
     if(variant === 'after') await expect(page.locator('#library-dialog')).toHaveAttribute('aria-busy','false');
-    await page.evaluate(() => { Object.assign(window,{libraryCloseCount:0}); document.querySelector('#library-dialog')!.addEventListener('close',() => (window as any).libraryCloseCount++); });
+    await page.evaluate(() => {
+      const dialog=document.querySelector('#library-dialog')!; Object.assign(window,{libraryCloseCount:0,libraryOpenRemovals:0});
+      dialog.addEventListener('close',() => (window as any).libraryCloseCount++);
+      const observer=new MutationObserver(records=>{ for(const record of records) if(record.oldValue!==null) (window as any).libraryOpenRemovals++; });
+      observer.observe(dialog,{attributes:true,attributeFilter:['open'],attributeOldValue:true}); Object.assign(window,{libraryObserver:observer});
+    });
     await page.locator('#library-dialog [data-copy]').first().click(); await expect(page.locator('#library-dialog .work-card')).toHaveCount(2);
-    const closes = await page.evaluate(() => (window as any).libraryCloseCount as number);
-    if(variant==='before') expect(closes).toBeGreaterThan(0); else expect(closes).toBe(0);
-    comparison[variant]={resizeSamples:pixels.length,clearedBitmapObservations:cleared,libraryRefreshCloseEvents:closes};
+    await expect(page.locator('#library-dialog')).toBeVisible();
+    const removals = await page.evaluate(() => (window as any).libraryOpenRemovals as number);
+    if(variant==='before') expect(removals).toBeGreaterThan(0); else expect(removals).toBe(0);
+    comparison[variant]={resizeSamples:pixels.length,clearedBitmapObservations:cleared,libraryRefreshOpenAttributeRemovals:removals};
     await page.getByRole('button',{name:'作品一覧を閉じる',exact:true}).click();
   }
   await testInfo.attach('shell-before-after.json',{body:JSON.stringify({baseline:'b890353e6caeed3353b859a6406caaa9afe01eb0',comparison,limits:['Pre-paint ResizeObserver pixel probes, not a physical tablet or human perception test.']},null,2),contentType:'application/json'});
@@ -173,6 +179,9 @@ test('app menu: keyboard, outside dismiss, direct routes, backup and unchanged c
   await page.locator('#menu-button').click(); await page.getByRole('menuitem',{name:'TtroPianoについて',exact:true}).click(); await expect(page.locator('.about-copy')).toContainText('音を置いて、動かして、聴く。'); await page.locator('#floating').press('Escape');
   await expect(page.locator('#menu-button')).toBeFocused(); await page.locator('#menu-button').click(); const pending=page.waitForEvent('download'); await page.getByRole('menuitem',{name:'作品ファイルを保存',exact:true}).click(); const backup=await pending;
   const path=testInfo.outputPath('menu-backup.ttropiano'); await backup.saveAs(path); expect(JSON.parse(await readFile(path,'utf8')).project.notes).toHaveLength(1);
+  await page.locator('#menu-button').click(); await page.getByRole('menuitem',{name:'作品名を変更',exact:true}).click(); await page.getByRole('textbox',{name:'作品名',exact:true}).fill('メニューから作った曲'); await page.getByRole('button',{name:'保存',exact:true}).click();
+  await page.locator('#menu-button').click(); await page.getByRole('menuitem',{name:'新しい曲',exact:true}).click(); await expect(page.locator('#project-name')).toHaveText('無題のピアノ曲'); await expect(page.locator('#roll')).toBeFocused();
+  await page.locator('#works').click(); await expect(page.locator('#library-dialog')).toHaveAttribute('aria-busy','false'); await expect(page.locator('#library-dialog .work-card')).toHaveCount(2); await expect(page.locator('#library-dialog')).toContainText('メニューから作った曲');
 });
 
 test('library: search, sort, keyed refresh, rename, duplicate and project handoff stay coherent', async ({page}) => {
