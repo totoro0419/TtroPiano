@@ -2,7 +2,7 @@
 
 **タブレットを中心に、ピアノ曲を「考えたとおりに」作れる作曲アプリ。**
 
-> Status: **v0.2 preview + 操作改善 (2026-10-25 JST)**。音符編集→ピアノ再生→自動保存→MIDI入出力まで接続。操作改善は [変更内容](docs/11_DIRECT_COMPOSITION.md) と [前後検証](docs/12_DIRECT_VALIDATION.md)。初回実装の証拠は [検証記録](docs/10_VALIDATION.md)。Android/iPad実機・初見の使いやすさ評価は未確認。
+> Status: **v0.2 公開プレビュー (2026-10-25 JST)**。音符編集→ピアノ再生→自動保存→MIDI入出力まで接続。操作改善は [変更内容](docs/11_DIRECT_COMPOSITION.md) と [前後検証](docs/12_DIRECT_VALIDATION.md)。初回実装の証拠は [検証記録](docs/10_VALIDATION.md)。Android/iPad実機・初見の使いやすさ評価は未確認。
 
 ## 目的
 
@@ -78,21 +78,22 @@ CIでは `npx playwright install --with-deps chromium` → `node scripts/prepare
 
 ## 配布
 
-**GitHub Pages公開URL：https://totoro0419.github.io/TtroPiano/**（ログイン不要）。最新のメニュー・画面切り替え改善は `improvement/app-shell-2026-10-25` に保存。既存PRは未マージ。
+**GitHub Pages公開URL：https://totoro0419.github.io/TtroPiano/**（ログイン不要）。PR #1〜#4はすべてマージ済みで、最新の実装ソースは `main` に収録。公開物は `gh-pages` の `release.json` でソースコミットを確認できる。
 
 PWAとしてホーム画面へ追加できる構成です。「曲の設定 → ホーム画面に追加」から、対応ブラウザーの追加画面または手順を開けます。初回は接続し、「オフライン準備完了」を確認すると音符編集・保存・ピアノ再生をオフラインで使えます。実機のインストール完了は未確認。
 
 静的Webアプリ。`dist/` をHTTPSの静的ホストへ配信できる。GitHub Actionsにテスト/ビルド、成果物、Pages用ワークフローを収録。
 
-GitHub Pages用の本番ファイルは `gh-pages` ブランチのルートに保存済み（PWAとピアノ音源を含む57ファイル、元ビルドとhash照合済み）。公開方法は **Settings → Pages → Source: Deploy from a branch → Branch: gh-pages → /(root)**。Pagesのデプロイ成功と、公開URLでの音符入力・保存・再生開始・再読込後の復元・オフライン準備表示を確認。[GitHub Pagesの記録](docs/14_GITHUB_PAGES.md)に証拠と未確認範囲を記載。PRは自動マージしない。
+GitHub Pagesの現在の配信元は `gh-pages` ブランチのルート（**Settings → Pages → Deploy from a branch → gh-pages → /(root)**）。2026-10-25の最新スタート画面版を配信したワークフローは [成功](https://github.com/totoro0419/TtroPiano/actions/runs/40183371251) し、`gh-pages/release.json` は検証済みPR #4のソースSHAを記録している。公開URLでの旧版の基本動作検証と、最新コードのブラウザーCI成功は別の検査であり、最新版の全実機操作を確認したものではない。
 
-`.github/workflows/pages.yml` は、将来ソースを `main` に取り込んで Source を GitHub Actions に変更した後の自動公開用。現在の `gh-pages` からの公開とは別の経路で、未マージのまま実装を公開できる。
+`.github/workflows/pages.yml` はPagesのSourceを **GitHub Actions** に変更したときだけ、Actions画面から**手動起動**できる公開ワークフロー。現時点で `main` へのpushからの自動公開は無効にしている（Sourceが `gh-pages` に設定されているため）。Sourceを切り替えるときは既存の公開サイトを維持できるよう設定・成功を確認する。
 
 - [GitHub Pages公開アプリ（ログイン不要）](https://totoro0419.github.io/TtroPiano/)
 - [初回実装PR #1](https://github.com/totoro0419/TtroPiano/pull/1)
 - [作曲操作の改善PR #2（#1を基準）](https://github.com/totoro0419/TtroPiano/pull/2)
-- [メニュー・画面切り替え改善PR #3（#2を基準）](https://github.com/totoro0419/TtroPiano/pull/3)
-- [最新の比較・本番ブラウザー13試験・オフライン試験](https://github.com/totoro0419/TtroPiano/actions/runs/40173961057)
+- [メニュー・画面切り替え改善PR #3（マージ済み）](https://github.com/totoro0419/TtroPiano/pull/3)
+- [スタート画面・PWAインストールPR #4（マージ済み）](https://github.com/totoro0419/TtroPiano/pull/4)
+- [最新のCI：単体・ビルド・ブラウザー試験成功](https://github.com/totoro0419/TtroPiano/actions/runs/40183140754)
 
 作品は端末内のみ。ブラウザーのサイトデータを削除すると作品も消えるため、長く残す作品は `.ttropiano` ファイルにも書き出せる。音符/声部/別案/演奏表現/視点をまとめて保持する。
 

@@ -1,7 +1,8 @@
 name: Publish GitHub Pages
+# Current Pages source is gh-pages (branch deployment). This deploy-pages
+# workflow must be run only after switching Settings > Pages source to
+# GitHub Actions. Do not run it on every push under the branch-source mode.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read

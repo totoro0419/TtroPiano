@@ -4,6 +4,14 @@
 
 **公開URL：https://totoro0419.github.io/TtroPiano/**
 
+## 最新の公開状態（2026-10-25）
+
+- 最新の配信：`gh-pages` コミット `b46cc69281192e04b4d739c24e953c044edcf6cf`、[Pagesデプロイ成功](https://github.com/totoro0419/TtroPiano/actions/runs/40183371251)。
+- [release.json](https://github.com/totoro0419/TtroPiano/blob/gh-pages/release.json) のソースコミットは `61ab29d83ae5d3bcc0711bc1a822af64826bc76a`（スタート画面PR #4）。[そのCI](https://github.com/totoro0419/TtroPiano/actions/runs/40183140754) のテスト・ビルド・本番ブラウザー試験は成功。
+- PR #1〜#4は順次マージ済み。`main` への統合コミットは `83196f4fb0ce757e8746074c852a5928f73c104e`。
+- 現在のPagesの配信元は従来どおり `gh-pages`。`main` からの新しいActions直接デプロイはSourceの方式が違うため失敗した。既存のブランチ配信とは分けて扱う。設定を変更するまで、Actions直接デプロイは手動起動のみとする。
+- 最新版をGitHub Pages上で物理タッチ/OSインストール/実音まで再検証したものではない。以下の旧版検証と区別する。
+
 後続のメニュー・画面切り替え改善も公開済み。最新リリースと検証は [15 — 画面切り替えとアプリメニュー](15_APP_SHELL.md) を参照。以下は初回公開時の記録。
 
 GitHub Pagesのデプロイ成功と、公開URLでの実動作確認が完了した。[公開ワークフロー](https://github.com/totoro0419/TtroPiano/actions/runs/40171519097) は2026-10-25 16:06:43 JSTに成功。利用者のPages有効化後、GitHub APIの `has_pages: true`、公開コミット、配信URLを確認した。
