@@ -1,4 +1,5 @@
 const paths: Record<string, string> = {
+  home: '<path d="m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9"/>',
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
   add: '<path d="M12 4v16M4 12h16"/>',
   upload: '<path d="M12 16V3m-5 5 5-5 5 5M4 16v5h16v-5"/>',

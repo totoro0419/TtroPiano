@@ -1,8 +1,8 @@
 import { icon } from './icons';
 
-export type MenuCommand = 'works' | 'new' | 'demo' | 'rename' | 'import' | 'midi' | 'backup' | 'settings' | 'install' | 'help' | 'about';
+export type MenuCommand = 'home' | 'works' | 'new' | 'demo' | 'rename' | 'import' | 'midi' | 'backup' | 'settings' | 'install' | 'help' | 'about';
 const groups: { name: string; items: [MenuCommand, string, string][] }[] = [
-  { name: '作品', items: [['works', '作品一覧', 'folder'], ['new', '新しい曲', 'add'], ['demo', '作例を試す', 'piano']] },
+  { name: '作品', items: [['home', 'スタート画面', 'home'], ['works', '作品一覧', 'folder'], ['new', '新しい曲', 'add'], ['demo', '作例を試す', 'piano']] },
   { name: 'この曲とファイル', items: [['rename', '作品名を変更', 'phrase'], ['import', 'ファイルを読み込む', 'upload'], ['midi', 'MIDIを書き出す', 'download'], ['backup', '作品ファイルを保存', 'download']] },
   { name: 'アプリ', items: [['settings', '曲の設定', 'settings'], ['install', 'ホーム画面に追加', 'add'], ['help', '操作のヒント', 'help'], ['about', 'TtroPianoについて', 'info']] },
 ];
