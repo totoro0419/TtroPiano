@@ -129,3 +129,102 @@ test('PWA manifest, decoded install icons, readiness and explicit install entry'
   await page.evaluate(()=>window.dispatchEvent(new Event('appinstalled')));await expect(page.locator('#install-app')).toHaveText('ホーム画面に追加済み');await expect(page.locator('#install-app')).toBeDisabled();
   await testInfo.attach('pwa-validation.json',{body:JSON.stringify({manifest,offlineReady:true,installUiWithTestEvent:'PASS',actualOsInstall:'未確認'},null,2),contentType:'application/json'});
 });
+
+test('before/after: resized editor has no cleared presentation and library refresh never closes its modal', async ({page},testInfo) => {
+  const comparison: Record<string, unknown> = {};
+  for (const variant of ['before','after']) {
+    await page.goto(variant === 'before' ? 'http://127.0.0.1:4175/?__qa_layout' : '/?__qa_layout');
+    await expect(page.locator('#roll')).toBeVisible();
+    await page.evaluate(() => {
+      const canvas = document.querySelector<HTMLCanvasElement>('#roll')!, samples: number[][] = [];
+      const observer = new ResizeObserver(() => { const d = canvas.width / canvas.getBoundingClientRect().width; samples.push([...canvas.getContext('2d')!.getImageData(Math.round(20*d),Math.round(20*d),1,1).data]); });
+      observer.observe(canvas); Object.assign(window,{shellSamples:samples,shellObserver:observer});
+    });
+    for (let i=0;i<6;i++) { await page.locator('#expression').click(); await expect(page.locator('#inspector')).toBeVisible(); await page.getByRole('button',{name:'パネルを閉じる',exact:true}).click(); }
+    await page.setViewportSize({width:768,height:1024}); await page.setViewportSize({width:1024,height:768});
+    const pixels = await page.evaluate(() => (window as any).shellSamples as number[][]);
+    expect(pixels.length).toBeGreaterThanOrEqual(12);
+    const cleared = pixels.filter(pixel => pixel[0]===0 && pixel[1]===0 && pixel[2]===0).length;
+    if (variant === 'before') expect(cleared).toBeGreaterThan(0); else expect(cleared).toBe(0);
+    await page.locator('#roll').click({position:{x:170,y:220}}); await expect(page.locator('#save-status')).toHaveText('この端末に保存済み');
+    await page.locator('#works').click(); await expect(page.locator('#library-dialog .work-card')).toHaveCount(1);
+    if(variant === 'after') await expect(page.locator('#library-dialog')).toHaveAttribute('aria-busy','false');
+    await page.evaluate(() => { Object.assign(window,{libraryCloseCount:0}); document.querySelector('#library-dialog')!.addEventListener('close',() => (window as any).libraryCloseCount++); });
+    await page.locator('#library-dialog [data-copy]').first().click(); await expect(page.locator('#library-dialog .work-card')).toHaveCount(2);
+    const closes = await page.evaluate(() => (window as any).libraryCloseCount as number);
+    if(variant==='before') expect(closes).toBeGreaterThan(0); else expect(closes).toBe(0);
+    comparison[variant]={resizeSamples:pixels.length,clearedBitmapObservations:cleared,libraryRefreshCloseEvents:closes};
+    await page.getByRole('button',{name:'作品一覧を閉じる',exact:true}).click();
+  }
+  await testInfo.attach('shell-before-after.json',{body:JSON.stringify({baseline:'b890353e6caeed3353b859a6406caaa9afe01eb0',comparison,limits:['Pre-paint ResizeObserver pixel probes, not a physical tablet or human perception test.']},null,2),contentType:'application/json'});
+});
+
+test('app menu: keyboard, outside dismiss, direct routes, backup and unchanged canvas allocation', async ({page},testInfo) => {
+  await page.goto('/'); const roll=page.locator('#roll'); await roll.click({position:{x:170,y:220}});
+  const box=(await roll.boundingBox())!; await page.locator('#menu-button').click();
+  await expect(page.locator('#app-menu')).toBeVisible(); await expect(page.locator('#menu-button')).toHaveAttribute('aria-expanded','true');
+  await expect(page.locator('[data-command="works"]')).toBeFocused(); await page.locator('[data-command="works"]').press('ArrowDown'); await expect(page.locator('[data-command="new"]')).toBeFocused();
+  await page.locator('[data-command="new"]').press('End'); await expect(page.locator('[data-menu-close]')).toBeFocused(); await page.locator('[data-menu-close]').press('Escape');
+  await expect(page.locator('#app-menu')).toBeHidden(); await expect(page.locator('#menu-button')).toBeFocused();
+  await page.locator('#menu-button').press('ArrowDown'); await page.locator('[data-command="works"]').press('Tab'); await expect(page.locator('#app-menu')).toBeHidden(); await expect(page.locator('#works')).toBeFocused();
+  await page.locator('#menu-button').click(); await roll.click({position:{x:400,y:300}}); await expect(page.locator('#app-menu')).toBeHidden();
+  await roll.press('ControlOrMeta+a'); await expect(page.locator('#selection-count')).toHaveText('1音'); expect(await roll.boundingBox()).toEqual(box);
+  await page.locator('#menu-button').click(); await page.getByRole('menuitem',{name:'曲の設定',exact:true}).click(); await expect(page.locator('#settings-form')).toBeVisible(); await page.getByRole('button',{name:'閉じる',exact:true}).click();
+  await page.locator('#menu-button').click(); await page.getByRole('menuitem',{name:'TtroPianoについて',exact:true}).click(); await expect(page.locator('.about-copy')).toContainText('音を置いて、動かして、聴く。'); await page.locator('#floating').press('Escape');
+  await expect(page.locator('#menu-button')).toBeFocused(); await page.locator('#menu-button').click(); const pending=page.waitForEvent('download'); await page.getByRole('menuitem',{name:'作品ファイルを保存',exact:true}).click(); const backup=await pending;
+  const path=testInfo.outputPath('menu-backup.ttropiano'); await backup.saveAs(path); expect(JSON.parse(await readFile(path,'utf8')).project.notes).toHaveLength(1);
+});
+
+test('library: search, sort, keyed refresh, rename, duplicate and project handoff stay coherent', async ({page}) => {
+  await page.goto('/'); await page.locator('#roll').click({position:{x:170,y:220}}); await page.locator('#works').click();
+  const dialog=page.locator('#library-dialog'); await expect(dialog).toHaveAttribute('aria-busy','false'); await expect(dialog.locator('.work-card')).toHaveCount(1);
+  await page.evaluate(()=>{Object.assign(window,{originalSearch:document.querySelector('#work-search'),libraryCloseCount:0});document.querySelector('#library-dialog')!.addEventListener('close',()=> (window as any).libraryCloseCount++);});
+  await page.locator('#work-search').fill('無題'); await dialog.locator('[data-copy]').click(); await expect(dialog.locator('.work-card')).toHaveCount(2); await expect(dialog).toHaveAttribute('aria-busy','false');
+  await dialog.locator('[data-rename]').first().click(); await page.getByRole('textbox',{name:'作品名',exact:true}).fill('無題のメロディー 改名'); await page.getByRole('button',{name:'保存',exact:true}).click(); await expect(dialog.locator('.work-card')).toContainText(['無題のメロディー 改名','無題のピアノ曲']);
+  await expect(page.locator('#work-search')).toHaveValue('無題'); expect(await page.evaluate(()=>document.querySelector('#work-search')===(window as any).originalSearch)).toBe(true); expect(await page.evaluate(()=>(window as any).libraryCloseCount)).toBe(0);
+  await page.locator('#work-sort').selectOption('name'); const names=await dialog.locator('.work-card strong').allTextContents(); expect(names).toEqual([...names].sort((a,b)=>a.localeCompare(b,'ja')));
+  await page.locator('#work-search').fill('存在しない作品'); await expect(dialog.locator('.work-card')).toHaveCount(0); await expect(dialog.locator('.library-empty')).toBeVisible(); await dialog.locator('[data-clear]').click(); await expect(dialog.locator('.work-card')).toHaveCount(2);
+  const target=dialog.locator('.work-card').filter({hasText:'無題のメロディー 改名'}); await target.locator('[data-open]').click(); await expect(dialog).toBeHidden(); await expect(page.locator('#project-name')).toHaveText('無題のメロディー 改名'); await expect(page.locator('#roll')).toBeFocused();
+  await page.reload(); await expect(page.locator('#project-name')).toHaveText('無題のメロディー 改名');
+  await page.locator('#works').click(); await expect(dialog).toHaveAttribute('aria-busy','false');
+  await dialog.locator('.work-card[data-current="true"] [data-delete]').click(); await page.getByRole('button',{name:'キャンセル',exact:true}).click(); await expect(dialog.locator('.work-card')).toHaveCount(2);
+  await dialog.locator('.work-card[data-current="true"] [data-delete]').click(); await page.getByRole('button',{name:'削除する',exact:true}).click(); await expect(dialog).toHaveAttribute('aria-busy','false');
+  await expect(dialog.locator('.work-card')).toHaveCount(2); await expect(dialog.locator('.work-card').filter({hasText:'無題のメロディー 改名'})).toHaveCount(0);
+  await page.getByRole('button',{name:'作品一覧を閉じる',exact:true}).click(); await page.reload(); await expect(page.locator('#project-name')).toHaveText('無題のピアノ曲');
+  await page.locator('#works').click(); await expect(dialog).toHaveAttribute('aria-busy','false'); await expect(dialog.locator('.work-card').filter({hasText:'無題のメロディー 改名'})).toHaveCount(0);
+});
+
+test('library: delayed loading can be dismissed; failed list retries without losing the composition', async ({page}) => {
+  await page.addInitScript(()=>{
+    const original=Worker.prototype.postMessage;
+    Worker.prototype.postMessage=function(this: Worker,message:any,...rest:any[]){
+      if(message?.kind==='list' && (window as any).failList){setTimeout(()=>this.dispatchEvent(new MessageEvent('message',{data:{id:message.id,error:'試験用の読み込み失敗'}})),25);return;}
+      if(message?.kind==='load'){setTimeout(()=>Reflect.apply(original,this,[message,...rest]),250);return;}
+      return Reflect.apply(original,this,[message,...rest]);
+    } as typeof original;
+    Object.assign(window,{failList:true});
+  });
+  await page.goto('/'); await page.locator('#roll').click({position:{x:170,y:220}}); await page.locator('#works').click();
+  const dialog=page.locator('#library-dialog'); await expect(dialog.locator('.library-error')).toBeVisible(); await expect(dialog).toHaveAttribute('aria-busy','false');
+  await page.evaluate(()=>(window as any).failList=false); await dialog.locator('[data-retry]').click(); await expect(dialog.locator('.work-card')).toHaveCount(1); await expect(dialog.locator('.library-error')).toBeHidden();
+  await dialog.locator('[data-copy]').click(); await expect(dialog.locator('.work-card')).toHaveCount(2); await expect(dialog).toHaveAttribute('aria-busy','false');
+  await dialog.locator('.work-card [data-open]').first().click(); await expect(dialog).toBeVisible(); await dialog.locator('[data-close]').click(); await page.waitForTimeout(400);
+  await expect(dialog).toBeHidden(); await expect(page.locator('#project-name')).toHaveText('無題のピアノ曲'); await page.locator('#roll').press('ControlOrMeta+a'); await expect(page.locator('#selection-count')).toHaveText('1音');
+});
+
+test('navigation adapts to touch, narrow windows and large text without covering controls', async ({page},testInfo) => {
+  await page.goto('/'); const measurements=[];
+  for (const [width,height] of [[320,740],[390,844],[768,1024],[1024,768],[1366,768]]) {
+    await page.setViewportSize({width,height}); await page.locator('#menu-button').click(); const menu=(await page.locator('#app-menu').boundingBox())!;
+    expect(menu.x).toBeGreaterThanOrEqual(0);expect(menu.x+menu.width).toBeLessThanOrEqual(width);expect(menu.y+menu.height).toBeLessThanOrEqual(height);
+    await expect(page.locator('[data-command="works"]')).toBeFocused();await page.locator('[data-command="works"]').press('End');await expect(page.locator('[data-menu-close]')).toBeInViewport(); await page.locator('[data-menu-close]').press('Escape');
+    await page.locator('#menu-button').click(); await page.locator('[data-command="works"]').click(); await expect(page.locator('#library-dialog')).toHaveAttribute('aria-busy','false'); const library=(await page.locator('#library-dialog').boundingBox())!;
+    expect(library.x).toBeGreaterThanOrEqual(0);expect(library.x+library.width).toBeLessThanOrEqual(width);expect(library.y+library.height).toBeLessThanOrEqual(height);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    measurements.push({width,height,menu,library}); await page.getByRole('button',{name:'作品一覧を閉じる',exact:true}).click();
+  }
+  await page.setViewportSize({width:390,height:600}); await page.addStyleTag({content:'.app-menu [role=menuitem],.library-dialog button,.library-dialog input,.library-dialog select{font-size:24px!important}.app-menu .menu-current strong,.library-dialog .work-meta strong{font-size:26px!important}'});
+  await page.locator('#menu-button').click(); await page.locator('[data-command="help"]').click(); await expect(page.locator('.help-copy')).toBeVisible(); await page.getByRole('button',{name:'閉じる',exact:true}).click();
+  await page.locator('#menu-button').click(); await page.locator('[data-command="works"]').click(); await expect(page.locator('#library-dialog')).toHaveAttribute('aria-busy','false'); expect(await page.locator('#library-dialog').evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
+  await testInfo.attach('navigation-layout.json',{body:JSON.stringify({measurements,largeControlText:'PASS',physicalTablet:'未確認'},null,2),contentType:'application/json'});
+});

@@ -1,4 +1,9 @@
 const paths: Record<string, string> = {
+  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  add: '<path d="M12 4v16M4 12h16"/>',
+  upload: '<path d="M12 16V3m-5 5 5-5 5 5M4 16v5h16v-5"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 1 1 4 3c-1 .5-1 1-1 2m0 3v.1"/>',
   play: '<path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/>',
   pause: '<path d="M8 5v14m8-14v14" stroke-width="4"/>',
   stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"/>',
