@@ -13,7 +13,7 @@ export interface Project {
   ppq: 960; notes: Note[]; parts: Part[]; tempos: Tempo[]; meters: Meter[]; pedals: Pedal[]; phrases: Phrase[];
 }
 export interface View { startTick: number; topPitch: number; beatWidth: number; rowHeight: number }
-export interface Session { view: View; cursor: number; activePart: string; snap: number; noteLength: number; loop: { enabled: boolean; start: number; end: number } }
+export interface Session { editSound?: boolean; pendingEdit?: { originals: Note[]; draft: Note[]; label: string }; view: View; cursor: number; activePart: string; snap: number; noteLength: number; loop: { enabled: boolean; start: number; end: number } }
 export const uid = () => { if (crypto.randomUUID) return crypto.randomUUID(); const b = crypto.getRandomValues(new Uint8Array(16)); b[6] = b[6] & 15 | 64; b[8] = b[8] & 63 | 128; const s = [...b].map(x => x.toString(16).padStart(2, '0')).join(''); return `${s.slice(0,8)}-${s.slice(8,12)}-${s.slice(12,16)}-${s.slice(16,20)}-${s.slice(20)}`; };
 export const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 export const snapTick = (n: number, grid: number) => Math.max(0, Math.round(grid ? n / grid : n) * (grid || 1));
