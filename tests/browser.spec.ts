@@ -153,6 +153,40 @@ test('ruler drag scrubs live; tap still seeks; choosing or Shift-drag selects a 
   await expect(page.locator('#position')).toHaveText('1.1');
 });
 
+
+test('always-visible length palette changes input duration with one press, synchronizes select and survives reload', async ({ page }) => {
+  await openEditor(page);
+  const palette=page.locator('#duration-palette'), length=page.locator('#note-length'), roll=page.locator('#roll');
+  await expect(palette).toBeVisible();
+  await expect(palette.locator('[data-note-length="960"]')).toHaveAttribute('aria-pressed','true');
+  await palette.locator('[data-note-length="480"]').click();
+  await expect(length).toHaveValue('480');
+  await expect(palette.locator('[data-note-length="480"]')).toHaveAttribute('aria-pressed','true');
+  await roll.click({position:{x:170,y:210}});
+  await expect(page.locator('#selection-count')).toHaveText('1音');
+  await palette.locator('[data-note-length="1920"]').click();
+  await roll.click({position:{x:245,y:175}});
+  const durations=await page.evaluate(() => JSON.parse(localStorage.getItem('__test-duration-dump')||'null'));
+  void durations; // New notes are checked by the selected note's precision field below.
+  await page.locator('#quick-details').click();
+  await expect(page.locator('#precision-form input[name="length"]')).toHaveValue('2');
+  await page.getByRole('button',{name:'パネルを閉じる'}).click();
+  await length.selectOption('120');
+  await expect(page.locator('#duration-current')).toHaveText('⅛拍');
+  await expect(palette.locator('[aria-pressed="true"]')).toHaveCount(0);
+  await palette.locator('[data-note-length="240"]').click();
+  await expect(length).toHaveValue('240');
+  await expect(page.locator('#save-status')).toHaveText('この端末に保存済み');
+  await page.reload(); await enterFromHome(page);
+  await expect(palette.locator('[data-note-length="240"]')).toHaveAttribute('aria-pressed','true');
+  for (const width of [1024,390,320]) {
+    await page.setViewportSize({width,height:760});
+    await expect(palette).toBeInViewport({ratio:0.95});
+    await expect(palette.locator('[data-note-length="240"]')).toBeInViewport({ratio:0.95});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+});
+
 const RULER = 36;
 
 test('selection keeps canvas and dock stable across tablet orientations; numeric keyboard route remains', async ({ page }) => {
