@@ -8,6 +8,7 @@ import { TempoMap } from './time';
 import { icon } from './icons';
 const escape = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 const button = (id: string, name: string, glyph = '', cls = '') => `<button type="button" id="${id}" class="${cls}" title="${name}" aria-label="${name}">${glyph ? icon(glyph) : ''}<span>${name}</span></button>`;
+interface InstallPrompt extends Event { prompt(): Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> }
 export class App {
   store: ProjectStore; session: Session; storage = new Persistence(); piano = new Piano(); transport: Transport; roll!: PianoRoll;
   root: HTMLElement; ready: Promise<void>; held = new Map<number, { token: number; voice?: Voice }>(); auditionId = 0; lastSaveTimer = 0; toastTimer = 0;
@@ -16,6 +17,10 @@ export class App {
   lastTempos = '';
   destroyed = false;
   savedProposal?: PianoRoll['suspended'];
+  installPrompt?: InstallPrompt;
+  appInstalled = false;
+  offlineReady = false;
+  offlineError = '';
   constructor(root: HTMLElement, public test = false) {
     this.root = root; root.classList.add('app-shell'); this.store = new ProjectStore(newProject()); this.session = initialSession(this.store.project);
     this.transport = new Transport(this.piano, () => this.store.project, () => this.session, message => this.notify(message));
@@ -31,6 +36,8 @@ export class App {
     <div id="floating" class="floating" popover="auto" role="dialog" aria-label="曲と操作の設定"></div>
     <dialog id="library-dialog" class="library-dialog" aria-label="作品一覧"></dialog><dialog id="ask-dialog" class="ask-dialog" aria-label="確認"></dialog>
     <input id="file-input" type="file" accept=".mid,.midi,.ttropiano,.json" hidden>`;
+    window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); this.installPrompt = e as InstallPrompt; this.renderPwa(); });
+    window.addEventListener('appinstalled', () => { this.appInstalled = true; this.installPrompt = undefined; this.renderPwa(); });
     this.ready = this.boot();
   }
   $(selector: string) { return this.root.querySelector<HTMLElement>(selector)!; }
@@ -61,7 +68,7 @@ export class App {
       window.addEventListener('pagehide', () => this.save());
       window.addEventListener('beforeunload', e => { if (this.storage.status !== 'saved') { this.save(); e.preventDefault(); } });
       document.addEventListener('keydown', e => this.shortcut(e));
-      if ('serviceWorker' in navigator && import.meta.env.PROD) navigator.serviceWorker.register(new URL('sw.js', appRoot), { scope: appRoot.pathname }).then(() => this.offlineStatus()).catch(() => this.notify('オフライン用の準備に失敗しました。接続中は編集できます。'));
+      if ('serviceWorker' in navigator && import.meta.env.PROD) navigator.serviceWorker.register(new URL('sw.js', appRoot), { scope: appRoot.pathname }).then(() => this.offlineStatus()).catch(() => { this.offlineError = 'オフライン準備に失敗しました。接続を確認してアプリを開き直してください。'; this.renderPwa(); this.notify('オフライン用の準備に失敗しました。接続中は編集できます。'); });
     }
     const animate = () => { if (this.destroyed) return; if (this.transport.playing) { this.roll.cursor = this.transport.position(); this.roll.invalidate(); this.renderPosition(); this.drawOverview(); } requestAnimationFrame(animate); }; requestAnimationFrame(animate);
   }
@@ -153,6 +160,8 @@ export class App {
       el.querySelector('form')!.addEventListener('submit', e => { e.preventDefault(); const f = new FormData(e.currentTarget as HTMLFormElement), start = Math.round((Number(f.get('start')) - 1) * PPQ), end = Math.round((Number(f.get('end')) - 1) * PPQ); if (end <= start || start < 0) { this.notify('終了を開始より後にしてください。'); return; } this.session.loop = { enabled: true, start, end }; this.transport.changed(true); this.renderControls(); this.roll.invalidate(); this.saveView(); el.hidePopover(); });
     } else {
       el.insertAdjacentHTML('beforeend', `<form id="settings-form" class="field-stack"><div class="form-row"><label>テンポ <small>BPM</small><input name="bpm" type="number" min="10" max="1000" step="0.1" value="${tempo}" required></label><label>拍子<div class="inline"><input name="num" aria-label="拍子の分子" type="number" min="1" max="32" value="${meter.numerator}" required><span>/</span><select name="den" aria-label="拍子の分母">${[1,2,4,8,16,32].map(n => `<option ${n === meter.denominator ? 'selected' : ''}>${n}</option>`).join('')}</select></div></label></div><label class="check-row"><input name="here" type="checkbox">再生位置から変更（曲の途中）</label><button class="primary" type="submit">適用</button></form><label class="check-row edit-sound"><input id="edit-sound" type="checkbox" ${this.editSound ? 'checked' : ''}>入力・音高修正の音を鳴らす</label><div class="section-line"></div><div class="action-grid"><button data-export="midi">${icon('download')} MIDIを書き出す</button><button data-export="project">${icon('download')} 作品ファイル</button><button data-import>ファイルを読み込む</button><button data-demo>作例を開く</button></div><p class="muted small">MIDI：音符・強弱・テンポ・拍子・ペダル。フレーズと別案は作品ファイルに保存。</p><p id="offline-status" class="muted small">ピアノ：Splendid Grand（2段階サンプル）</p><a class="small muted" href="./piano/LICENSE.txt" target="_blank" rel="noopener">音源のライセンス</a><details class="event-details"><summary>テンポ・拍子の変更点</summary><div id="time-events"></div></details>`);
+      el.insertAdjacentHTML('beforeend', `<section class="pwa-settings" aria-label="アプリとして使う"><h3>アプリとして使う</h3><button id="install-app" class="apply-button">ホーム画面に追加</button><p id="pwa-readiness" role="status" class="muted small"></p><details id="install-help"><summary>追加方法</summary><p>Android・Chrome・Edge：ブラウザーのメニューから「アプリをインストール」または「ホーム画面に追加」。</p><p>iPhone・iPad：Safariの共有メニューから「ホーム画面に追加」。</p><p>最初はインターネットに接続し、「オフライン準備完了」を確認してください。追加したアイコンから、独立した画面で開けます。</p></details></section>`);
+      el.querySelector<HTMLButtonElement>('#install-app')!.onclick = () => { void this.installApp(); }; this.renderPwa();
       el.querySelector('form')!.addEventListener('submit', e => { e.preventDefault(); const f = new FormData(e.currentTarget as HTMLFormElement), bpm = Number(f.get('bpm')), numerator = Number(f.get('num')), denominator = Number(f.get('den')), tick = f.has('here') ? Math.round(this.session.cursor) : 0; try { this.store.commit('テンポ・拍子を変更', p => ({ ...p, tempos: setEvent(p.tempos, { tick, bpm }), meters: setEvent(p.meters, { tick, numerator, denominator }) })); el.hidePopover(); } catch (error) { this.notify((error as Error).message); } });
       el.querySelector<HTMLInputElement>('#edit-sound')!.onchange = e => { this.session.editSound = (e.target as HTMLInputElement).checked; this.saveView(); };
       el.querySelectorAll<HTMLButtonElement>('[data-export]').forEach(b => b.onclick = () => b.dataset.export === 'midi' ? this.downloadMidi() : this.downloadProject());
@@ -274,7 +283,25 @@ export class App {
   download(data: BlobPart, type: string, suffix: string) { const url = URL.createObjectURL(new Blob([data], { type })), a = document.createElement('a'); a.href = url; a.hidden = true; document.body.append(a); a.download = this.store.project.name.replace(/[\\/:*?"<>|]/g, '_') + suffix; a.click(); a.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 5000); }
   downloadMidi() { this.download(exportMidi(this.store.project) as unknown as BlobPart, 'audio/midi', '.mid'); }
   downloadProject() { this.syncPending(); this.download(JSON.stringify({ format: 'TtroPiano', project: this.store.project, session: this.session }), 'application/json', '.ttropiano'); }
-  async offlineStatus() { const registration = await navigator.serviceWorker.ready; const worker = registration.active; if (!worker) return; const channel = new MessageChannel(); channel.port1.onmessage = e => { if (e.data.ready) this.notify('オフラインの準備ができました。ピアノ音源もこの端末に保存済みです。'); }; worker.postMessage({ type: 'offline-status' }, [channel.port2]); }
+  renderPwa() {
+    const button = this.root.querySelector<HTMLButtonElement>('#install-app'), status = this.root.querySelector('#pwa-readiness'); if (!button || !status) return;
+    const standalone = matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+    button.disabled = standalone || this.appInstalled; button.textContent = standalone ? 'アプリとして起動中' : this.appInstalled ? 'ホーム画面に追加済み' : 'ホーム画面に追加';
+    status.textContent = this.offlineReady ? 'オフライン準備完了 · ピアノ音源も保存済み' : this.offlineError || ('serviceWorker' in navigator && import.meta.env.PROD ? 'オフライン準備中 · 初回は接続を保ってください' : 'オンラインで利用できます');
+  }
+  async installApp() {
+    const prompt = this.installPrompt;
+    if (!prompt) { this.root.querySelector<HTMLDetailsElement>('#install-help')!.open = true; return; }
+    this.installPrompt = undefined;
+    try { await prompt.prompt(); await prompt.userChoice; }
+    catch { this.root.querySelector<HTMLDetailsElement>('#install-help')!.open = true; }
+    this.renderPwa();
+  }
+  async offlineStatus() {
+    const registration = await navigator.serviceWorker.ready, worker = registration.active; if (!worker) return;
+    const channel = new MessageChannel(), timeout = window.setTimeout(() => { channel.port1.close(); this.offlineError = 'オフライン準備を確認できません。接続中は編集できます。'; this.renderPwa(); }, 5000);
+    channel.port1.onmessage = e => { clearTimeout(timeout); channel.port1.close(); this.offlineReady = e.data.ready === true; if (this.offlineReady) { this.offlineError = ''; this.notify('オフラインの準備ができました。ピアノ音源もこの端末に保存済みです。'); } else this.offlineError = 'オフライン準備が未完了です。接続中にアプリを開き直してください。'; this.renderPwa(); }; worker.postMessage({ type: 'offline-status' }, [channel.port2]);
+  }
 }
 const root = document.querySelector<HTMLElement>('#app');
 if (root) { const app = new App(root, new URLSearchParams(location.search).has('__qa_layout')); void app.ready.catch(e => { root.textContent = '起動できませんでした：' + e.message; }); }

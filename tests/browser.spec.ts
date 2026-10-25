@@ -41,6 +41,8 @@ test('real offline: cached app, saved composition and piano samples survive netw
   await expect(page.locator('#save-status')).toHaveText('この端末に保存済み');
   await page.evaluate(async () => { await navigator.serviceWorker.ready; if (!navigator.serviceWorker.controller) await new Promise<void>(resolve => navigator.serviceWorker.addEventListener('controllerchange', () => resolve(), { once: true })); });
   await context.setOffline(true); await page.reload(); await expect(page.locator('#roll')).toBeVisible();
+  const cachedPwa = await page.evaluate(async () => { const url=document.querySelector<HTMLLinkElement>('link[rel=manifest]')!.href,manifest=await (await fetch(url)).json();return {id:new URL(manifest.id,url).pathname,icons:await Promise.all(manifest.icons.map(async (icon:{src:string})=>(await (await fetch(new URL(icon.src,url))).arrayBuffer()).byteLength))}; });
+  expect(cachedPwa.id).toBe('/'); expect(cachedPwa.icons.every((bytes:number)=>bytes>0)).toBe(true);
   await page.locator('#roll').click({ position: { x: 226, y: 180 } }); await expect(page.locator('#save-status')).toHaveText('この端末に保存済み');
   await page.locator('#play').click(); await expect(page.locator('#play')).toHaveAttribute('aria-pressed', 'true', { timeout: 10000 });
   await page.locator('#stop').click(); await context.setOffline(false);
@@ -112,4 +114,18 @@ test('selection keeps canvas and dock stable across tablet orientations; numeric
   await roll.press('ControlOrMeta+a'); await page.locator('#quick-details').press('Enter'); await expect(page.locator('#precision-form')).toBeVisible();
   await page.locator('#precision-form input[name="pitch"]').fill('65'); await page.getByRole('button',{name:'数値を適用',exact:true}).click();
   await page.getByRole('button',{name:'パネルを閉じる',exact:true}).click(); await expect(roll).toBeFocused();
+});
+
+
+test('PWA manifest, decoded install icons, readiness and explicit install entry', async ({page},testInfo) => {
+  await page.goto('/');await expect(page.locator('#roll')).toBeVisible();
+  const manifest=await page.evaluate(async()=>{const url=document.querySelector<HTMLLinkElement>('link[rel=manifest]')!.href,m=await(await fetch(url)).json();const images=[];for(const icon of m.icons){const image=new Image();image.src=new URL(icon.src,url).href;await image.decode();images.push({sizes:icon.sizes,width:image.naturalWidth,height:image.naturalHeight});}return {id:new URL(m.id,url).pathname,start:new URL(m.start_url,url).pathname,scope:new URL(m.scope,url).pathname,display:m.display,images};});
+  expect(manifest.id).toBe('/');expect(manifest.start).toBe('/');expect(manifest.scope).toBe('/');expect(manifest.display).toBe('standalone');expect(manifest.images).toEqual([{sizes:'192x192',width:192,height:192},{sizes:'512x512',width:512,height:512}]);
+  await page.locator('#settings').click();await expect(page.locator('#pwa-readiness')).toContainText('オフライン準備完了',{timeout:15000});
+  await page.locator('#install-help summary').click();await expect(page.locator('#install-help')).toHaveAttribute('open','');
+  // A test event exercises our entry/cancel flow. It is not an OS installation.
+  await page.evaluate(()=>{const e=new Event('beforeinstallprompt',{cancelable:true});Object.assign(e,{prompt:async()=>{document.documentElement.dataset.installTest='prompted';},userChoice:Promise.resolve({outcome:'dismissed'})});window.dispatchEvent(e);});
+  await page.locator('#install-app').click();await expect(page.locator('html')).toHaveAttribute('data-install-test','prompted');await expect(page.locator('#install-app')).toBeEnabled();
+  await page.evaluate(()=>window.dispatchEvent(new Event('appinstalled')));await expect(page.locator('#install-app')).toHaveText('ホーム画面に追加済み');await expect(page.locator('#install-app')).toBeDisabled();
+  await testInfo.attach('pwa-validation.json',{body:JSON.stringify({manifest,offlineReady:true,installUiWithTestEvent:'PASS',actualOsInstall:'未確認'},null,2),contentType:'application/json'});
 });
