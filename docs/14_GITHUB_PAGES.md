@@ -2,6 +2,10 @@
 
 2026-10-25 JST。「Git hubで公開して」の指示に対応。GitHub Pagesへの公開状況を、既存の別ホストでの公開と区別する。
 
+**公開URL：https://totoro0419.github.io/TtroPiano/**
+
+GitHub Pagesのデプロイ成功と、公開URLでの実動作確認が完了した。[公開ワークフロー](https://github.com/totoro0419/TtroPiano/actions/runs/40171519097) は2026-10-25 16:06:43 JSTに成功。利用者のPages有効化後、GitHub APIの `has_pages: true`、公開コミット、配信URLを確認した。
+
 ## 公開対象
 
 - 公開専用ブランチ：[gh-pages](https://github.com/totoro0419/TtroPiano/tree/gh-pages)
@@ -23,13 +27,29 @@ GitHub Pagesを有効にする設定：
 2. **Source: Deploy from a branch** を選ぶ。
 3. **Branch: gh-pages**、**/(root)** を選び **Save**。
 
-利用中のGitHub連携にはPages設定を変更する操作がない。ブラウザーの設定画面は未サインインで404になり、Sign inの入口を表示したため、GitHubの安全なサインイン手順が必要。公開用ブランチが存在することだけを、Pages公開成功とは扱わない。
+利用中のGitHub連携にはPages設定を変更する操作がない。ブラウザーの設定画面は未サインインで404になり、Sign inの入口を表示したため、安全な認証手順を開始した。GitHubの端末メール認証に進んだが、認証要求が完了せず中断した。Pages設定は変更していない。公開用ブランチが存在することだけを、Pages公開成功とは扱わない。
 
-現在の記録：**公開ファイル保存PASS／Pages有効化と公開URLでの起動確認は未確認**。
+その後、利用者から公開済みとの連絡があり、APIと公開ページで確認した。**公開ファイル保存PASS／Pages有効化PASS／デプロイPASS／公開URLでの起動PASS**。
+
+## 公開URLのブラウザー試験
+
+| 項目 | 結果 | 実施内容 |
+|---|---|---|
+| 編集画面起動 | PASS | ログイン不要でGitHub Pages配下のアプリが表示された |
+| 音符入力・自動保存 | PASS | 2音を入力し、全選択で「2音」、この端末に保存済みの表示を確認 |
+| 再生開始・停止 | PASS | 再生ボタンが一時停止・aria-pressed trueへ変化し、停止できた。物理スピーカーの出音は未確認 |
+| 再読込後の作品復元 | PASS | 再読込後の全選択でも「2音」。保存状態を維持 |
+| PWA・音源のキャッシュ準備 | PASS | 設定画面に「オフライン準備完了・ピアノ音源も保存済み」 |
+| GitHub Pages上での実ネット切断 | 未確認 | 今回の公開確認ではネットワークを切断していない。CIのルート配信での試験とは区別 |
+| OSへの実インストール | 未確認 | Android/iPad/Windows実機では試験していない |
+
+![GitHub Pagesで再読込後も2音を復元した編集画面](evidence/github-pages-editor.jpg)
+
+画面写真は公開URLで今回取得したもので、ローカル開発画面の再利用ではない。[機械可読の確認記録](evidence/github-pages-preparation.json)。
 
 ## PWAとパス
 
-Viteの `base: './'`、manifestの `id/start_url/scope: './'`、Service Workerの自身のURLからのルート解決を維持。リポジトリ配下への配信に対応する設計。公開URLでのService Worker登録・オフライン準備確認は、有効化後に別途試験する。ルート配信でのオフライン回帰試験PASSを、GitHub Pages配下での試験PASSへ読み替えない。
+Viteの `base: './'`、manifestの `id/start_url/scope: './'`、Service Workerの自身のURLからのルート解決を維持。実際に `/TtroPiano/` 配下で起動・保存・キャッシュ準備を確認した。ルート配信でのオフライン回帰試験PASSを、GitHub Pages配下での実ネット切断試験PASSへ読み替えない。
 
 Android/iPad/Windows実機へのインストールと物理端末の出音・指操作は未確認。
 

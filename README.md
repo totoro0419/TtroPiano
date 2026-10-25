@@ -71,17 +71,17 @@ CIでは `npx playwright install --with-deps chromium` → `node scripts/prepare
 
 ## 配布
 
-**公開URL：https://ttropiano-compose.ibukioike2009.chatgpt.site/**（ログイン不要）。実装コードは `improvement/direct-composition-2026-10-25` に保存。PR #1/#2は未マージ。
+**GitHub Pages公開URL：https://totoro0419.github.io/TtroPiano/**（ログイン不要）。実装コードは `improvement/direct-composition-2026-10-25` に保存。PR #1/#2は未マージ。
 
 PWAとしてホーム画面へ追加できる構成です。「曲の設定 → ホーム画面に追加」から、対応ブラウザーの追加画面または手順を開けます。初回は接続し、「オフライン準備完了」を確認すると音符編集・保存・ピアノ再生をオフラインで使えます。実機のインストール完了は未確認。
 
 静的Webアプリ。`dist/` をHTTPSの静的ホストへ配信できる。GitHub Actionsにテスト/ビルド、成果物、Pages用ワークフローを収録。
 
-GitHub Pages用の本番ファイルは `gh-pages` ブランチのルートに保存済み（PWAとピアノ音源を含む57ファイル、元ビルドとhash照合済み）。現在の公開方法は **Settings → Pages → Source: Deploy from a branch → Branch: gh-pages → /(root) → Save**。Pagesの有効化と公開URLでの起動確認は、[GitHub Pagesの記録](docs/14_GITHUB_PAGES.md)で状態を区別する。PRは自動マージしない。
+GitHub Pages用の本番ファイルは `gh-pages` ブランチのルートに保存済み（PWAとピアノ音源を含む57ファイル、元ビルドとhash照合済み）。公開方法は **Settings → Pages → Source: Deploy from a branch → Branch: gh-pages → /(root)**。Pagesのデプロイ成功と、公開URLでの音符入力・保存・再生開始・再読込後の復元・オフライン準備表示を確認。[GitHub Pagesの記録](docs/14_GITHUB_PAGES.md)に証拠と未確認範囲を記載。PRは自動マージしない。
 
 `.github/workflows/pages.yml` は、将来ソースを `main` に取り込んで Source を GitHub Actions に変更した後の自動公開用。現在の `gh-pages` からの公開とは別の経路で、未マージのまま実装を公開できる。
 
-- [公開アプリ（ログイン不要）](https://ttropiano-compose.ibukioike2009.chatgpt.site)
+- [GitHub Pages公開アプリ（ログイン不要）](https://totoro0419.github.io/TtroPiano/)
 - [初回実装PR #1](https://github.com/totoro0419/TtroPiano/pull/1)
 - [作曲操作の改善PR #2（#1を基準）](https://github.com/totoro0419/TtroPiano/pull/2)
 - [最新の比較・本番ブラウザー・オフライン試験](https://github.com/totoro0419/TtroPiano/actions/runs/40170722553)

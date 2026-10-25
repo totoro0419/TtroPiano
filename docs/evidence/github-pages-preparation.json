@@ -12,7 +12,28 @@
   "noJekyll": true,
   "mainModified": false,
   "pullRequestsMerged": false,
-  "pagesEnabled": "未確認",
-  "deployedBrowserTest": "未確認",
-  "physicalDeviceInstall": "未確認"
+  "browserAuthentication": "端末メール認証が完了せず中断。再要求していない",
+  "pagesSettingsModified": false,
+  "pagesEnabled": "PASS",
+  "deployedBrowserTest": {
+    "startup": "PASS",
+    "twoNotesInputAndSaved": "PASS",
+    "playPauseState": "PASS",
+    "stop": "PASS",
+    "reloadRestoredTwoNotes": "PASS",
+    "offlineCacheReadyIncludingPianoSamples": "PASS",
+    "screenshot": "github-pages-editor.jpg",
+    "networkCut": "未確認",
+    "physicalSpeakerOutput": "未確認"
+  },
+  "physicalDeviceInstall": "未確認",
+  "pagesEnabledBy": "利用者の設定後にGitHub APIで確認",
+  "deployment": {
+    "runId": 40171519097,
+    "jobId": 121103185272,
+    "status": "success",
+    "url": "https://totoro0419.github.io/TtroPiano/",
+    "completedAt": "2026-10-25T07:06:43Z",
+    "headSha": "932c3fa7f321e264087199b7424935c010db8ac5"
+  }
 }

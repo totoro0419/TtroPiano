@@ -2,9 +2,11 @@
 
 2026-10-25 JST。「レポジトリに作り公開」「PWAにも」の指示に対応。
 
-公開アプリ：https://ttropiano-compose.ibukioike2009.chatgpt.site/
+GitHub Pages公開アプリ：https://totoro0419.github.io/TtroPiano/
 
-実装コード：[GitHubの改善ブランチ](https://github.com/totoro0419/TtroPiano/tree/improvement/direct-composition-2026-10-25)。既存のPR #1/#2は未マージ。GitHub Pagesが有効になったという報告ではない。
+初回に公開した別ホスト：https://ttropiano-compose.ibukioike2009.chatgpt.site/ （以下の初回公開設定の記録はこのホストについて）。
+
+実装コード：[GitHubの改善ブランチ](https://github.com/totoro0419/TtroPiano/tree/improvement/direct-composition-2026-10-25)。既存のPR #1/#2は未マージ。GitHub Pagesの有効化・デプロイ・公開URLでの起動確認も後続作業で完了した。
 
 後続の「Git hubで公開して」に対応した公開ブランチとPagesの設定状況は [14 — GitHub Pages公開](14_GITHUB_PAGES.md) を参照。
 
@@ -45,9 +47,10 @@
 | オフライン準備表示 | PASS | 全資産キャッシュ完了の応答後に準備完了を表示 |
 | ネット切断後の再読込・編集・保存・ピアノ再生 | PASS | CIブラウザーの実ネット切断。manifestとアイコンもオフライン取得 |
 | インストール入口・キャンセル・完了通知UI | PASS | テストイベント。OSへの本当のインストールではない |
-| 公開URLのPWA追加後の再観察 | 実行不能 | 自動操作ブラウザーのURLポリシー制限 |
+| 初回の別ホストのPWA追加後の再観察 | 実行不能 | 自動操作ブラウザーのURLポリシー制限 |
+| GitHub Pagesでの再読込・保存復元・PWA準備表示 | PASS | 公開URLで2音を作り、再読込後に復元。「オフライン準備完了・ピアノ音源も保存済み」を確認 |
 | Android/iPad/Windows実機へのインストール | 未確認 | 実機試験をしていない |
 
 [manifest・アイコン・PWA試験データ](evidence/pwa-validation.json)、[CI結果](evidence/pwa-ci.json)。
 
-OSの実機へのインストール、ホーム画面アイコンからの実機起動は未確認。テスト用のインストールイベントを、実際のOSインストール成功と扱わない。公開URLへの追加のブラウザー検査は、上記のポリシー制限により実行不能。
+OSの実機へのインストール、ホーム画面アイコンからの実機起動は未確認。テスト用のインストールイベントを、実際のOSインストール成功と扱わない。別ホストへの追加検査は上記の制限で実行不能だったが、独立したGitHub Pagesの公開確認は [14](14_GITHUB_PAGES.md) のとおり実施した。
