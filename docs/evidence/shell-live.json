@@ -1,0 +1,36 @@
+{
+  "url": "https://totoro0419.github.io/TtroPiano/",
+  "date": "2026-10-25",
+  "deploymentRun": "https://github.com/totoro0419/TtroPiano/actions/runs/40174177107",
+  "deploymentCommit": "fb9edb03b61acc8b9de357cde7757dd42277fb15",
+  "sourceCommit": "d9521aaf5b655e3ec3552572ad06ded0cd4d132d",
+  "cache": "7e57db9c5472a087",
+  "browser": "Cloud Chrome",
+  "results": {
+    "newMenuVisible": "PASS",
+    "previousTwoNotesPreservedAcrossUpdate": "PASS",
+    "menuOpens28NoteExample": "PASS",
+    "playbackStateAndStop": "PASS",
+    "worksSearchTwoToOne": "PASS",
+    "duplicateWithoutClosingLibraryTwoToThree": "PASS",
+    "switchBackToOriginalTwoNotes": "PASS",
+    "savedStatus": "PASS",
+    "offlineReadinessIncludingPianoSamples": "PASS"
+  },
+  "logReview": {
+    "applicationOriginErrorsObserved": 0,
+    "unrelatedExtensionErrors": 46
+  },
+  "unverified": [
+    "Physical tablet flicker perception",
+    "Physical speaker output and latency",
+    "OS install",
+    "OS text scaling",
+    "Screen reader/assistive technology",
+    "Network cutoff at GitHub Pages origin"
+  ],
+  "screenshots": [
+    "app-menu.jpg",
+    "work-library.jpg"
+  ]
+}

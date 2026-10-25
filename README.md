@@ -74,7 +74,7 @@ CIでは `npx playwright install --with-deps chromium` → `node scripts/prepare
 
 ## 配布
 
-**GitHub Pages公開URL：https://totoro0419.github.io/TtroPiano/**（ログイン不要）。実装コードは `improvement/direct-composition-2026-10-25` に保存。PR #1/#2は未マージ。
+**GitHub Pages公開URL：https://totoro0419.github.io/TtroPiano/**（ログイン不要）。最新のメニュー・画面切り替え改善は `improvement/app-shell-2026-10-25` に保存。既存PRは未マージ。
 
 PWAとしてホーム画面へ追加できる構成です。「曲の設定 → ホーム画面に追加」から、対応ブラウザーの追加画面または手順を開けます。初回は接続し、「オフライン準備完了」を確認すると音符編集・保存・ピアノ再生をオフラインで使えます。実機のインストール完了は未確認。
 
@@ -87,7 +87,8 @@ GitHub Pages用の本番ファイルは `gh-pages` ブランチのルートに�
 - [GitHub Pages公開アプリ（ログイン不要）](https://totoro0419.github.io/TtroPiano/)
 - [初回実装PR #1](https://github.com/totoro0419/TtroPiano/pull/1)
 - [作曲操作の改善PR #2（#1を基準）](https://github.com/totoro0419/TtroPiano/pull/2)
-- [最新の比較・本番ブラウザー・オフライン試験](https://github.com/totoro0419/TtroPiano/actions/runs/40170722553)
+- [メニュー・画面切り替え改善PR #3（#2を基準）](https://github.com/totoro0419/TtroPiano/pull/3)
+- [最新の比較・本番ブラウザー13試験・オフライン試験](https://github.com/totoro0419/TtroPiano/actions/runs/40173961057)
 
 作品は端末内のみ。ブラウザーのサイトデータを削除すると作品も消えるため、長く残す作品は `.ttropiano` ファイルにも書き出せる。音符/声部/別案/演奏表現/視点をまとめて保持する。
 

@@ -1,0 +1,86 @@
+{
+  "measurements": [
+    {
+      "width": 320,
+      "height": 740,
+      "menu": {
+        "x": 12,
+        "y": 70,
+        "width": 296,
+        "height": 656
+      },
+      "library": {
+        "x": 19,
+        "y": 12,
+        "width": 282,
+        "height": 716
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "menu": {
+        "x": 12,
+        "y": 70,
+        "width": 308,
+        "height": 760
+      },
+      "library": {
+        "x": 19,
+        "y": 12,
+        "width": 352,
+        "height": 820
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "menu": {
+        "x": 12,
+        "y": 80,
+        "width": 308,
+        "height": 804
+      },
+      "library": {
+        "x": 19,
+        "y": 172,
+        "width": 730,
+        "height": 680
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "menu": {
+        "x": 12,
+        "y": 80,
+        "width": 308,
+        "height": 672
+      },
+      "library": {
+        "x": 82,
+        "y": 44,
+        "width": 860,
+        "height": 680
+      }
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "menu": {
+        "x": 12,
+        "y": 80,
+        "width": 308,
+        "height": 672
+      },
+      "library": {
+        "x": 253,
+        "y": 44,
+        "width": 860,
+        "height": 680
+      }
+    }
+  ],
+  "largeControlText": "PASS",
+  "physicalTablet": "未確認"
+}

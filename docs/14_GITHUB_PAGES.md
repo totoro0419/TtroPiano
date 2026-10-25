@@ -4,6 +4,8 @@
 
 **公開URL：https://totoro0419.github.io/TtroPiano/**
 
+後続のメニュー・画面切り替え改善も公開済み。最新リリースと検証は [15 — 画面切り替えとアプリメニュー](15_APP_SHELL.md) を参照。以下は初回公開時の記録。
+
 GitHub Pagesのデプロイ成功と、公開URLでの実動作確認が完了した。[公開ワークフロー](https://github.com/totoro0419/TtroPiano/actions/runs/40171519097) は2026-10-25 16:06:43 JSTに成功。利用者のPages有効化後、GitHub APIの `has_pages: true`、公開コミット、配信URLを確認した。
 
 ## 公開対象
