@@ -1,0 +1,328 @@
+{
+  "name": "Splendid Grand · MuseScore General",
+  "version": 1,
+  "sourceSha256": "f9a37b36655f23e167c66ec91bef6097c8e99be29286219a54062919eb41aeae",
+  "samples": [
+    {
+      "file": "soft-23.mp3",
+      "root": 23,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 196461,
+      "sha256": "1eb788a120e4b3801fc69ff8a087645f815760c48bd289bda6d1cc90def0e549"
+    },
+    {
+      "file": "soft-27.mp3",
+      "root": 27,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 197613,
+      "sha256": "82169f9ac4e8298a8b22eb36e84b7d03fb1b4c4cf23129dbfe6098aaaeed6a44"
+    },
+    {
+      "file": "soft-31.mp3",
+      "root": 31,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 197037,
+      "sha256": "ecb505915d5e5315b8c1a09b9ed0d4582c63088b50d6a97000e9ff64deb22a3a"
+    },
+    {
+      "file": "soft-35.mp3",
+      "root": 35,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 216621,
+      "sha256": "90352578474ba796339a0a4f2803cbae4be45b696f32b3d53b715738935755b7"
+    },
+    {
+      "file": "soft-40.mp3",
+      "root": 40,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 209709,
+      "sha256": "3466f531c5c6dd502b36ae09ceddb29261ba9d20f91db7b34127efd34241a967"
+    },
+    {
+      "file": "soft-45.mp3",
+      "root": 45,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 169965,
+      "sha256": "3b6a755ac0abd26dce6c7446ba77c515776a48398f29dc3467ffc1051c3baa68"
+    },
+    {
+      "file": "soft-50.mp3",
+      "root": 50,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 165357,
+      "sha256": "08b9912428827906ab9d5ee4019be2abff9bc2306af115c7b927f0760e1adc7b"
+    },
+    {
+      "file": "soft-55.mp3",
+      "root": 55,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 173997,
+      "sha256": "e7ee633215012c0f9778a3720b030a25a132cd60553c35edf8b28696ae6f0fda"
+    },
+    {
+      "file": "soft-59.mp3",
+      "root": 59,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 130797,
+      "sha256": "3989bbe0735e73ba15c03f4424686f4d5e30915bdc765ab4f59827e7e8441e4e"
+    },
+    {
+      "file": "soft-64.mp3",
+      "root": 64,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 136557,
+      "sha256": "8e9d83e75de941cf8083ebc559fa104635759368063add5bb011bb244de2fdff"
+    },
+    {
+      "file": "soft-69.mp3",
+      "root": 69,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 107757,
+      "sha256": "9cf8bd31d53f7e0a178306abad2e700aa4c649c09e9c11837583621d4684c41c"
+    },
+    {
+      "file": "soft-76.mp3",
+      "root": 76,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 87597,
+      "sha256": "9ad31e85467419327d0c5121304c78c35bf22f4e853096306c5ac53023feb6bf"
+    },
+    {
+      "file": "soft-80.mp3",
+      "root": 80,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 51885,
+      "sha256": "390f39eb245cdd191bdebb430a5be6396c50c50472db020a5f9b184cec215da4"
+    },
+    {
+      "file": "soft-85.mp3",
+      "root": 85,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 63405,
+      "sha256": "5e821c5cf1f6a54a69008405d13dcdd6f6d2e3addf0598d7d9df1d6063d94d1c"
+    },
+    {
+      "file": "soft-89.mp3",
+      "root": 89,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 66285,
+      "sha256": "30517da97b93aa0bb76d7f8d7a45a891ee02379472c084f0ee95b06b582c238e"
+    },
+    {
+      "file": "soft-93.mp3",
+      "root": 93,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 43821,
+      "sha256": "bc5c170a265c96d115c74d8eb5a759c910d5455c8277888e67398a418c97b50a"
+    },
+    {
+      "file": "soft-97.mp3",
+      "root": 97,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 34605,
+      "sha256": "363565c78f093a908f3f083d4bf1f6b2bf11619fe4d9be2c9ae82ffb3bb1d4b6"
+    },
+    {
+      "file": "soft-101.mp3",
+      "root": 101,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 33453,
+      "sha256": "b0d6890c4c1b044e3c9e5d335b28cef76fa6d79dd2a293d9b6bc479f8312a23f"
+    },
+    {
+      "file": "soft-105.mp3",
+      "root": 105,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 38637,
+      "sha256": "4387c1e77a66c00d2154f3b52b364517a21eb8b7d7fdb6e3a7b16fadd155752b"
+    },
+    {
+      "file": "soft-107.mp3",
+      "root": 107,
+      "layer": "soft",
+      "cents": 0,
+      "bytes": 43245,
+      "sha256": "6261b242e806486cbc250e4a4628fa53335ea61144ae704f8ba35b90ef940d2c"
+    },
+    {
+      "file": "hard-23.mp3",
+      "root": 23,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 210285,
+      "sha256": "b921f5ece6e81d0e11cbcf8692e333ad4a9cf9932ab1fe78757d43cb7fccef2c"
+    },
+    {
+      "file": "hard-27.mp3",
+      "root": 27,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 200493,
+      "sha256": "cee152fb04703e6402e2d5b9911bdbb7fc94053a3f6313942818699d3b4e478a"
+    },
+    {
+      "file": "hard-31.mp3",
+      "root": 31,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 197613,
+      "sha256": "422fa7d25db77f1b181a443f7eb38cb419ed777184fda21deb1fefd9dfc03c0f"
+    },
+    {
+      "file": "hard-35.mp3",
+      "root": 35,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 190125,
+      "sha256": "510a59bf1dfc6863b81244ae63f46f73478bdfe5e482aed4629cde4f68f5068d"
+    },
+    {
+      "file": "hard-40.mp3",
+      "root": 40,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 196461,
+      "sha256": "4a89b11285f41188b63412cb7356eb81ede968308965919a8148b7f0359281e8"
+    },
+    {
+      "file": "hard-45.mp3",
+      "root": 45,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 204525,
+      "sha256": "9c17654cf4f61c217c0f557b38444949442c67eef5d3f2662748611d4a0491eb"
+    },
+    {
+      "file": "hard-50.mp3",
+      "root": 50,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 201645,
+      "sha256": "450d3fcb048c871fc652641d6e0bc872a4369770ade5b855d7e5ffacb50f1bfd"
+    },
+    {
+      "file": "hard-55.mp3",
+      "root": 55,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 135981,
+      "sha256": "19b25d9f634c7b017a1546a28e4d7f17af39aabad86ee74342054c75127a6b91"
+    },
+    {
+      "file": "hard-59.mp3",
+      "root": 59,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 133101,
+      "sha256": "457ae8ad190134d84007b39901660dc37609b66b0b4f77683aaa8b4a25494a51"
+    },
+    {
+      "file": "hard-64.mp3",
+      "root": 64,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 126189,
+      "sha256": "bc437ac9d3a90416b60e5dd6fab49a3025ecddf15c924c3a32329edad4ab9760"
+    },
+    {
+      "file": "hard-69.mp3",
+      "root": 69,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 99693,
+      "sha256": "41e25bcb9d46fb5edb1f16aea532ff4319b9f655f6f34526a0e16bee277938e2"
+    },
+    {
+      "file": "hard-76.mp3",
+      "root": 76,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 84717,
+      "sha256": "2f2b50eb1526d6efe1e8be25b44ed09e1bea8244a98060934a9418791bd8af20"
+    },
+    {
+      "file": "hard-80.mp3",
+      "root": 80,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 63405,
+      "sha256": "e9e4bf958c6b4be5d39beca320fa30435e34a17c2725f4b3386bcae9aaeecd43"
+    },
+    {
+      "file": "hard-85.mp3",
+      "root": 85,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 62253,
+      "sha256": "a4714c58a30951a60dd194238e2cc5f89ac4bb40726153f96f0d73b4c5ac4216"
+    },
+    {
+      "file": "hard-89.mp3",
+      "root": 89,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 42093,
+      "sha256": "db640d62ce1a9f9c0a5462fa0bc53b066a73a5a62b978a07d649019131eacb1c"
+    },
+    {
+      "file": "hard-93.mp3",
+      "root": 93,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 30573,
+      "sha256": "25889b7c7d7d09822355e2c5f7d26f5acf65143d3370ee0fb266940868421186"
+    },
+    {
+      "file": "hard-97.mp3",
+      "root": 97,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 34605,
+      "sha256": "363565c78f093a908f3f083d4bf1f6b2bf11619fe4d9be2c9ae82ffb3bb1d4b6"
+    },
+    {
+      "file": "hard-101.mp3",
+      "root": 101,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 33453,
+      "sha256": "b0d6890c4c1b044e3c9e5d335b28cef76fa6d79dd2a293d9b6bc479f8312a23f"
+    },
+    {
+      "file": "hard-105.mp3",
+      "root": 105,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 38637,
+      "sha256": "4387c1e77a66c00d2154f3b52b364517a21eb8b7d7fdb6e3a7b16fadd155752b"
+    },
+    {
+      "file": "hard-107.mp3",
+      "root": 107,
+      "layer": "hard",
+      "cents": 0,
+      "bytes": 43245,
+      "sha256": "6261b242e806486cbc250e4a4628fa53335ea61144ae704f8ba35b90ef940d2c"
+    }
+  ],
+  "bytes": 4693896
+}

@@ -1,0 +1,258 @@
+{
+  "revision": "improved",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "viewport": [
+      1363,
+      936
+    ],
+    "date": "2026-10-25T05:25:08.663Z"
+  },
+  "coldPianoMs": 166.20000000018626,
+  "rows": [
+    {
+      "name": "01 4小節・16音のメロディー",
+      "status": "PASS",
+      "actions": 16,
+      "elapsedMs": 12472.1,
+      "longPresses": 0,
+      "longPressWaitMs": 0,
+      "panelOpens": 0,
+      "canvasMoves": 0,
+      "undoActions": 0,
+      "errors": [],
+      "unexpectedOutcomes": 0,
+      "unresponsive": 0
+    },
+    {
+      "name": "02 10音を連続入力",
+      "status": "PASS",
+      "actions": 10,
+      "elapsedMs": 4200.4,
+      "longPresses": 0,
+      "longPressWaitMs": 0,
+      "panelOpens": 0,
+      "canvasMoves": 0,
+      "undoActions": 0,
+      "errors": [],
+      "unexpectedOutcomes": 0,
+      "unresponsive": 0
+    },
+    {
+      "name": "03 5音の高さを修正",
+      "status": "PASS",
+      "actions": 5,
+      "elapsedMs": 103.3,
+      "longPresses": 0,
+      "longPressWaitMs": 0,
+      "panelOpens": 0,
+      "canvasMoves": 0,
+      "undoActions": 0,
+      "errors": [],
+      "unexpectedOutcomes": 0,
+      "unresponsive": 0
+    },
+    {
+      "name": "04 5音の長さを変更",
+      "status": "PASS",
+      "actions": 5,
+      "elapsedMs": 2135.6,
+      "longPresses": 0,
+      "longPressWaitMs": 0,
+      "panelOpens": 0,
+      "canvasMoves": 0,
+      "undoActions": 0,
+      "errors": [],
+      "unexpectedOutcomes": 0,
+      "unresponsive": 0
+    },
+    {
+      "name": "05 3音を削除",
+      "status": "PASS",
+      "actions": 3,
+      "elapsedMs": 54.9,
+      "longPresses": 0,
+      "longPressWaitMs": 0,
+      "panelOpens": 0,
+      "canvasMoves": 0,
+      "undoActions": 0,
+      "errors": [],
+      "unexpectedOutcomes": 0,
+      "unresponsive": 0
+    },
+    {
+      "name": "06 複数音を選択して移動",
+      "status": "PASS",
+      "actions": 2,
+      "elapsedMs": 32.8,
+      "longPresses": 0,
+      "longPressWaitMs": 0,
+      "panelOpens": 0,
+      "canvasMoves": 0,
+      "undoActions": 0,
+      "errors": [],
+      "unexpectedOutcomes": 0,
+      "unresponsive": 0
+    },
+    {
+      "name": "07 鍵盤で3音の和音と個別離鍵",
+      "status": "PASS",
+      "actions": 1,
+      "elapsedMs": 72.1,
+      "longPresses": 0,
+      "longPressWaitMs": 0,
+      "panelOpens": 0,
+      "canvasMoves": 0,
+      "undoActions": 0,
+      "errors": [],
+      "unexpectedOutcomes": 0,
+      "unresponsive": 0
+    },
+    {
+      "name": "08 2小節・8音のメロディーを複製",
+      "status": "PASS",
+      "actions": 2,
+      "elapsedMs": 399.8,
+      "longPresses": 0,
+      "longPressWaitMs": 0,
+      "panelOpens": 0,
+      "canvasMoves": 0,
+      "undoActions": 0,
+      "errors": [],
+      "unexpectedOutcomes": 0,
+      "unresponsive": 0
+    },
+    {
+      "name": "09 フレーズ化・移調・試聴",
+      "status": "PASS",
+      "actions": 4,
+      "elapsedMs": 198.7,
+      "longPresses": 0,
+      "longPressWaitMs": 0,
+      "panelOpens": 0,
+      "canvasMoves": 0,
+      "undoActions": 0,
+      "errors": [],
+      "unexpectedOutcomes": 0,
+      "unresponsive": 0
+    },
+    {
+      "name": "10 伴奏を加えて保存",
+      "status": "PASS",
+      "actions": 5,
+      "elapsedMs": 108.2,
+      "longPresses": 0,
+      "longPressWaitMs": 0,
+      "panelOpens": 0,
+      "canvasMoves": 0,
+      "undoActions": 0,
+      "errors": [],
+      "unexpectedOutcomes": 0,
+      "unresponsive": 0
+    },
+    {
+      "name": "11 既存音を選択して強弱を数値変更",
+      "status": "PASS",
+      "actions": 5,
+      "elapsedMs": 3332,
+      "longPresses": 0,
+      "longPressWaitMs": 0,
+      "panelOpens": 1,
+      "canvasMoves": 0,
+      "undoActions": 0,
+      "errors": [],
+      "unexpectedOutcomes": 0,
+      "unresponsive": 0
+    },
+    {
+      "name": "12 選択したまま空白へ次の音を追加",
+      "status": "PASS",
+      "actions": 3,
+      "elapsedMs": 2194.2,
+      "longPresses": 0,
+      "longPressWaitMs": 0,
+      "panelOpens": 0,
+      "canvasMoves": 0,
+      "undoActions": 0,
+      "errors": [],
+      "unexpectedOutcomes": 0,
+      "unresponsive": 0
+    },
+    {
+      "name": "13 別案保存・元案と新案を比較試聴",
+      "status": "PASS",
+      "actions": 6,
+      "elapsedMs": 441.7,
+      "longPresses": 0,
+      "longPressWaitMs": 0,
+      "panelOpens": 1,
+      "canvasMoves": 0,
+      "undoActions": 0,
+      "errors": [],
+      "unexpectedOutcomes": 0,
+      "unresponsive": 0
+    },
+    {
+      "name": "14 和音を置き音程関係を保って移動",
+      "status": "PASS",
+      "actions": 5,
+      "elapsedMs": 85,
+      "longPresses": 0,
+      "longPressWaitMs": 0,
+      "panelOpens": 0,
+      "canvasMoves": 0,
+      "undoActions": 0,
+      "errors": [],
+      "unexpectedOutcomes": 0,
+      "unresponsive": 0
+    },
+    {
+      "name": "15 最初の音を1つ置く",
+      "status": "PASS",
+      "actions": 1,
+      "elapsedMs": 17.9,
+      "longPresses": 0,
+      "longPressWaitMs": 0,
+      "panelOpens": 0,
+      "canvasMoves": 0,
+      "undoActions": 0,
+      "errors": [],
+      "unexpectedOutcomes": 0,
+      "unresponsive": 0
+    }
+  ],
+  "layoutComparison": {
+    "fixed": {
+      "left": 18,
+      "top": 897.3125,
+      "width": 306,
+      "height": 40,
+      "overlappedNotes": 0,
+      "distanceFromNote": 421
+    },
+    "nearbyCandidates": [
+      {
+        "left": 58,
+        "top": 440.8125,
+        "width": 306,
+        "height": 40,
+        "overlappedNotes": 24,
+        "distanceFromNote": 45
+      },
+      {
+        "left": 58,
+        "top": 512.8125,
+        "width": 306,
+        "height": 40,
+        "overlappedNotes": 24,
+        "distanceFromNote": 45
+      }
+    ],
+    "scope": "同じコマンドの矩形を密集音符の上下に実配置。遮蔽と距離のみ。視線・好み・人の誤操作は未測定。"
+  },
+  "limits": [
+    "合成PointerEventとDOM操作。人の速度、迷い、実機の誤操作率は未確認。",
+    "時間は待ち時間・フレーム待ち込みの再現時間。操作回数はタップ/ドラッグ/値入力/確定を各1、3指和音を1として数える。",
+    "canvasMovesは各シナリオで明示的な画面移動をしない。セットアップと事後検査は計測対象外。"
+  ]
+}

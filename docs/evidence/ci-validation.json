@@ -1,0 +1,23 @@
+{
+  "repository": "totoro0419/TtroPiano",
+  "testedCommit": "c9f5e6a1e2e53f40d9c73841b69f89ccbba66d1e",
+  "runId": 40120289169,
+  "jobId": 120950152184,
+  "url": "https://github.com/totoro0419/TtroPiano/actions/runs/40120289169",
+  "conclusion": "success",
+  "nodeTests": 16,
+  "browserTests": 4,
+  "nodeEvidence": "##[group]Run npm test\n2026-10-24T18:21:12.1572203Z \u001b[36;1mnpm test\u001b[0m\n2026-10-24T18:21:12.1639112Z shell: /usr/bin/bash -e {0}\n2026-10-24T18:21:12.1639432Z ##[endgroup]\n2026-10-24T18:21:12.2684530Z \n2026-10-24T18:21:12.2685984Z > ttropiano@0.2.0 test\n2026-10-24T18:21:12.2686546Z > node --import tsx --test tests/*.test.ts\n2026-10-24T18:21:12.2686870Z \n2026-10-24T18:21:12.6056071Z ✔ Undo/Redo preserves semantic edits, stable IDs and monotonic revisions (2.929309ms)\n2026-10-24T18:21:12.6058480Z ✔ new transaction prunes redo; rejected transaction changes neither data nor history (0.567329ms)\n2026-10-24T18:21:12.6066779Z ✔ group move preserves intervals and rejects out-of-range move atomically (0.933804ms)\n2026-10-24T18:21:12.6069018Z ✔ duplicate, insert and undo preserve phrase spanning bar lines and shift later events (0.625598ms)\n2026-10-24T18:21:12.6070917Z ✔ phrase variants preserve original and independently restore alternative (0.88407ms)\n2026-10-24T18:21:12.6072656Z ✔ deleting grouped notes cannot leave dangling phrase IDs (0.343251ms)\n2026-10-24T18:21:12.6074423Z ✔ stretch changes onsets and lengths in one transaction; inversion moves only boundary tone (0.622832ms)\n2026-10-24T18:21:12.6077538Z ✔ validator rejects corrupted notes, IDs, tempo and phrase variants (0.72816ms)\n2026-10-24T18:21:12.6083266Z ✔ tempo map exact inverse with multiple tempo events and crossings (0.381362ms)\n2026-10-24T18:21:12.6087433Z ✔ sustain extends until release, honors voice-specific events and off-at-note-end (0.412461ms)\n2026-10-24T18:21:12.6090988Z ✔ loop scheduling is half-open, no duplicate/missing boundary attacks over 100 cycles (2.483696ms)\n2026-10-24T18:21:12.6093332Z ✔ MIDI roundtrip preserves notes, 2 hands/parts, velocities, tempo, meters and sustain (3.199092ms)\n2026-10-24T18:21:12.6095440Z ✔ MIDI parser rejects truncated files, unsupported timing and illegal running status (1.369406ms)\n2026-10-24T18:21:12.6098453Z ✔ 10,000 note MIDI roundtrip and edit/undo keeps all notes (89.296776ms)\n2026-10-24T18:21:12.6111629Z ✔ seeking inside a held chord chases its sample phase once, including pedal sustain (0.644283ms)\n2026-10-24T18:21:12.6113320Z ✔ song end includes a pedal release after the final written note (0.398424ms)\n2026-10-24T18:21:12.6764925Z ℹ tests 16\n2026-10-24T18:21:12.6766655Z ℹ suites 0\n2026-10-24T18:21:12.6771672Z ℹ pass 16\n2026-10-24T18:21:12.6775979Z ℹ fail 0\n2026-10-24T18:21:12.6776724Z ℹ cancelled 0\n2026-10-24T18:21:12.6777510Z ℹ skipped 0\n2026-10-24T18:21:12.6781627Z ℹ todo 0\n2026-10-24T18:21:12.6783400Z ℹ duration_ms 371.335606\n2026-10-24T18:21:12.7008359Z ",
+  "browserEvidence": "##[group]Run npm run test:browser\n2026-10-24T18:21:37.5066179Z \u001b[36;1mnpm run test:browser\u001b[0m\n2026-10-24T18:21:37.5128364Z shell: /usr/bin/bash -e {0}\n2026-10-24T18:21:37.5128630Z ##[endgroup]\n2026-10-24T18:21:37.6165641Z \n2026-10-24T18:21:37.6166245Z > ttropiano@0.2.0 test:browser\n2026-10-24T18:21:37.6166864Z > playwright test\n2026-10-24T18:21:37.6167139Z \n2026-10-24T18:21:39.1021342Z \n2026-10-24T18:21:39.1021985Z Running 4 tests using 1 worker\n2026-10-24T18:21:39.1022367Z \n2026-10-24T18:21:45.9702530Z   ✓  1 tests/browser.spec.ts:5:1 › production browser: 20 integrated scenarios, actual PCM, 10,000 notes (6.2s)\n2026-10-24T18:21:46.9763145Z   ✓  2 tests/browser.spec.ts:16:1 › native UI touch, saving, MIDI download, project download and MIDI file input (989ms)\n2026-10-24T18:21:47.5851286Z   ✓  3 tests/browser.spec.ts:39:1 › real offline: cached app, saved composition and piano samples survive network loss (591ms)\n2026-10-24T18:21:49.5492508Z   ✓  4 tests/browser.spec.ts:49:1 › pedal tail outlives the final written note without early transport stop (1.9s)\n2026-10-24T18:21:49.6125563Z \n2026-10-24T18:21:49.6131096Z   4 passed (11.4s)\n2026-10-24T18:21:49.6662062Z ",
+  "scope": [
+    "20 integrated scenarios with synthetic PointerEvents, sample PCM, 10,000 notes",
+    "Native browser touch, real MIDI/project downloads and reimport",
+    "Real network offline, reload, editing, saving and sampled piano playback",
+    "Live pedal tail continues past the last written note"
+  ],
+  "limits": [
+    "Physical Android/iPad/Windows devices untested",
+    "Speaker listening and hardware latency unmeasured",
+    "Authenticated interaction on private Site not tested"
+  ]
+}
