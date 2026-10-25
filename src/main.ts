@@ -164,7 +164,7 @@ export class App {
   dismissFloating() { const el = this.$('#floating'); if (el.matches(':popover-open')) { el.hidePopover(); return true; } if (this.menu?.open) { this.menu.hide(); return true; } return false; }
   async runMenuCommand(command: MenuCommand) {
     if (command === 'works') { await this.showLibrary(); return; }
-    if (command === 'new' || command === 'demo') { this.notify(command === 'new' ? '新しい曲を開いています…' : '作例を開いています…'); await this.openProject(command === 'new' ? newProject() : exampleProject(),command === 'demo'); this.$('#roll').focus(); return; }
+    if (command === 'new' || command === 'demo') { this.notify(command === 'new' ? '新しい曲を開いています…' : '作例を開いています…'); await this.openProject(command === 'new' ? newProject() : exampleProject(),command === 'demo'); this.notify(command === 'new' ? '新しい曲を開きました' : '4小節の作例を開きました'); this.$('#roll').focus(); return; }
     if (command === 'rename') { const name = await this.ask('作品名',this.store.project.name); if (name) this.store.commit('作品名を変更',p => ({...p,name})); this.$('#roll').focus(); return; }
     if (command === 'import') { this.input('#file-input').click(); return; }
     if (command === 'midi' || command === 'backup') { command === 'midi' ? this.downloadMidi() : this.downloadProject(); this.$('#menu-button').focus(); return; }
