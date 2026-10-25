@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+  pages: write
 concurrency:
   group: publish-ttropiano-gh-pages
   cancel-in-progress: false
@@ -35,3 +36,8 @@ jobs:
           if git diff --cached --quiet; then echo "No changes to published files"; exit 0; fi
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "Publish TtroPiano from ${SOURCE_SHA}"
           git push origin HEAD:gh-pages
+      # GITHUB_TOKEN commits do not themselves trigger a Pages build.
+      - name: Explicitly request GitHub Pages branch build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${GITHUB_REPOSITORY}/pages/builds"
