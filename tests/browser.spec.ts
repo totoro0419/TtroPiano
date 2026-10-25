@@ -66,11 +66,11 @@ test('before/after: 15 identical composition scenarios, 3 paired runs', async ({
       await page.goto(variant==='before'?'http://127.0.0.1:4174/ux/':'/ux/'); await page.locator('#run').click();
       await expect(page.locator('#run')).toHaveText('操作比較完了', { timeout: 110000 });
       const json=await page.locator('#report').inputValue(),report=JSON.parse(json);pair[variant]=report;
-      expect(report.rows).toHaveLength(15);
+      expect(report.rows).toHaveLength(15); expect(report.compatibility).toHaveLength(2);expect(report.compatibility.every((r:{status:string})=>r.status==='PASS')).toBe(true);
       if(variant==='after') { expect(report.rows.filter((r: {status:string})=>r.status!=='PASS'),json).toEqual([]);expect(report.rows.every((r:{longPresses:number})=>r.longPresses===0)).toBe(true); }
       else expect(report.rows.filter((r:{status:string})=>r.status==='FAIL').map((r:{name:string})=>r.name.slice(0,2))).toEqual(['07','12']);
     }
-    pairs.push(pair);
+    expect(pair.after.compatibility[0].actions).toBe(pair.before.compatibility[0].actions);expect(pair.after.compatibility[1].actions).toBeLessThanOrEqual(pair.before.compatibility[1].actions);pairs.push(pair);
   }
   await testInfo.attach('ux-paired-comparison.json',{body:JSON.stringify({pairs,limits:['Script replay, not human task completion time or device latency.']},null,2),contentType:'application/json'});
 });
