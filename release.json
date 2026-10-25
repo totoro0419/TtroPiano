@@ -1,8 +1,9 @@
 {
   "application": "TtroPiano",
-  "source_commit": "4250908a772d920269c2409c64cebf6487127ef6",
-  "verified_code_commit": "7a8e611360545be288d97e81df7f74e4fc5d5be8",
-  "ci_run": "https://github.com/totoro0419/TtroPiano/actions/runs/40170722553",
-  "service_worker_cache": "c705370ad110692d",
-  "purpose": "GitHub Pages production build; no work data or credentials included"
+  "source_commit": "d9521aaf5b655e3ec3552572ad06ded0cd4d132d",
+  "source_tree": "9fae4d536dbc942bb67fe1283d407af257fd8601",
+  "pull_request": "https://github.com/totoro0419/TtroPiano/pull/3",
+  "ci_run": "https://github.com/totoro0419/TtroPiano/actions/runs/40173961057",
+  "service_worker_cache": "7e57db9c5472a087",
+  "release": "Stable canvas frames, app menu and work library"
 }
