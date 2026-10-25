@@ -1,0 +1,275 @@
+{
+  "environment": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "viewport": {
+      "width": 1024,
+      "height": 768
+    },
+    "secureContext": true,
+    "date": "2026-10-25T05:39:10.229Z"
+  },
+  "results": [
+    {
+      "name": "01 空白タップで1音追加・キャンバスに即描画",
+      "status": "PASS",
+      "observed": {
+        "notes": 1,
+        "pitch": 74,
+        "tick": 2400
+      },
+      "ms": 55.89999999999418
+    },
+    {
+      "name": "02 音符タップで削除・Undo/Redo",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 5.5
+    },
+    {
+      "name": "03 ドラッグは削除にならず移動、1回のUndo",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 33.70000000001164
+    },
+    {
+      "name": "04 短い音符の長押しと拡大ハンドル",
+      "status": "PASS",
+      "observed": {
+        "durationTick": 1200
+      },
+      "ms": 554.1000000000058
+    },
+    {
+      "name": "05 編集途中→2本指、仮編集取消とパン",
+      "status": "PASS",
+      "observed": {
+        "notes": 1,
+        "draft": 0
+      },
+      "ms": 34.69999999998254
+    },
+    {
+      "name": "06 ピンチ中心の拍・音程を保持、ズーム後のヒット一致",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 32.10000000000582
+    },
+    {
+      "name": "07 空白ドラッグは追加せず、pointercancelは未確定変更を破棄",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 35.90000000002328
+    },
+    {
+      "name": "08 長押し矩形選択→一括移動・複製・削除Undo",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 538.3999999999942
+    },
+    {
+      "name": "09 保存中もパン可能・最新revision復元・新Workerで再読込",
+      "status": "PASS",
+      "observed": {
+        "revision": 12,
+        "view": 2057.142857142857
+      },
+      "ms": 65.70000000001164
+    },
+    {
+      "name": "10 同時編集の保存競合を検出・失敗を保存済みと表示しない",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 31
+    },
+    {
+      "name": "11 右手・左手・内声、ミュート/ソロ、精密編集",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 62.39999999999418
+    },
+    {
+      "name": "12 MIDIファイル書出し→Fileから再読込",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 9.900000000023283
+    },
+    {
+      "name": "13 フレーズ別案A/B・転回・フレーズ挿入",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 32.39999999999418
+    },
+    {
+      "name": "14 全40ピアノサンプルを取得・デコードし無音/破損を検出",
+      "status": "PASS",
+      "observed": {
+        "sampleFiles": 40,
+        "downloadBytes": 4693896,
+        "maxCachedPCM": 50180976,
+        "cacheLimit": 50331648
+      },
+      "ms": 1202.3000000000175
+    },
+    {
+      "name": "15 Web Audioの実サンプル出力・強弱・ペダルの持続信号",
+      "status": "PASS",
+      "observed": {
+        "soft": 0.01576669177597541,
+        "hard": 0.19242498738737365,
+        "releasedTail": 0,
+        "pedalTail": 0.005411575781052196
+      },
+      "ms": 65.89999999999418
+    },
+    {
+      "name": "16 再生中の編集・パン・テンポ変更・再開",
+      "status": "PASS",
+      "observed": {
+        "pauseTick": 296
+      },
+      "ms": 381.6000000000058
+    },
+    {
+      "name": "17 ループ100周・境界に重複なし・ペダル音をループ末尾で切る",
+      "status": "PASS",
+      "observed": {
+        "scheduledAttacks": 200
+      },
+      "ms": 782.5
+    },
+    {
+      "name": "18 作品名・複製・作品一覧、作品ファイルで別案も復元",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 22.70000000001164
+    },
+    {
+      "name": "19 10,000音でパン・ズーム・保存、入力処理時間を記録",
+      "status": "PASS",
+      "observed": {
+        "samples": 50,
+        "p50": 2,
+        "p95": 3.6999999999825377,
+        "max": 4.2000000000116415
+      },
+      "ms": 983.7999999999884
+    },
+    {
+      "name": "20 縦横レイアウト・編集領域の維持・パネル外タップ消費",
+      "status": "PASS",
+      "observed": {
+        "portraitScrollWidth": 390,
+        "notes": 10000
+      },
+      "ms": 509.79999999998836
+    },
+    {
+      "name": "21 鍵盤3指和音・個別離鍵・鍵盤から外れる指",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 85.5
+    },
+    {
+      "name": "22 鍵盤の遅延読込中に離指しても後から鳴らない",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 104.29999999998836
+    },
+    {
+      "name": "23 直前の音を選択しても空白タップは毎回追加、パネルで縮まらない",
+      "status": "PASS",
+      "observed": {
+        "notes": 10,
+        "width": 1024,
+        "height": 479
+      },
+      "ms": 68.79999999998836
+    },
+    {
+      "name": "24 待たない単音選択・目盛りの範囲選択・タップ削除を両立",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 39.60000000000582
+    },
+    {
+      "name": "25 指の微動・ドラッグ後に元位置へ戻しても削除しない",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 30.5
+    },
+    {
+      "name": "26 短音符を待たず選択、隣の音符が拡大ハンドルより優先",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 37.70000000001164
+    },
+    {
+      "name": "27 2本指へ切替後に変更を保留、明示適用・Undo・競合拒否",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 31
+    },
+    {
+      "name": "28 鍵盤を保持しながらキャンバス2指、cancelは対象の鍵盤だけ",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 56.70000000001164
+    },
+    {
+      "name": "29 選択試聴を1押下で開始・途中停止・別案の音を混ぜない",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 236
+    },
+    {
+      "name": "30 選択ループは1押下で再生・同じボタンで解除",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 136
+    },
+    {
+      "name": "31 入力音を明示OFFにしても鍵盤と再生は使える",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 114.60000000000582
+    },
+    {
+      "name": "32 フレーズ・別案の保存で命名を強制せず、名前変更は保持",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 40.80000000001746
+    },
+    {
+      "name": "33 保留編集を保存・新しいWorkerで復元、壊れた提案を拒否",
+      "status": "PASS",
+      "observed": "期待どおり",
+      "ms": 57.80000000001746
+    }
+  ],
+  "metrics": {
+    "piano": {
+      "sampleFiles": 40,
+      "downloadBytes": 4693896,
+      "maxCachedPCM": 50180976,
+      "cacheLimit": 50331648
+    },
+    "signal": {
+      "soft": 0.01576669177597541,
+      "hard": 0.19242498738737365,
+      "releasedTail": 0,
+      "pedalTail": 0.005411575781052196
+    },
+    "pan10000": {
+      "samples": 50,
+      "p50": 2,
+      "p95": 3.6999999999825377,
+      "max": 4.2000000000116415
+    },
+    "testProjectsRemoved": 29
+  },
+  "limits": [
+    "合成PointerEvent。実機のタッチセンサー・OSジェスチャーは未確認。",
+    "Web Audioの出力信号を検査。実スピーカーでの聴感・ハードウェア遅延は未確認。",
+    "初見の作曲者による使いやすさ評価は未確認。"
+  ]
+}

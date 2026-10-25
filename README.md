@@ -2,7 +2,7 @@
 
 **タブレットを中心に、ピアノ曲を「考えたとおりに」作れる作曲アプリ。**
 
-> Status: **v0.2 preview 実装 (2026-10-25 JST)**。音符編集→ピアノ再生→自動保存→MIDI入出力まで接続。ブラウザー統合試験の証拠は [検証記録](docs/10_VALIDATION.md)。Android/iPad実機・初見の使いやすさ評価は未確認。
+> Status: **v0.2 preview + 操作改善 (2026-10-25 JST)**。音符編集→ピアノ再生→自動保存→MIDI入出力まで接続。操作改善は [変更内容](docs/11_DIRECT_COMPOSITION.md) と [前後検証](docs/12_DIRECT_VALIDATION.md)。初回実装の証拠は [検証記録](docs/10_VALIDATION.md)。Android/iPad実機・初見の使いやすさ評価は未確認。
 
 ## 目的
 
@@ -32,7 +32,9 @@
 | [07 100課題対応表](docs/07_100_PROBLEMS.md) | 前提となる100課題と共通設計への追跡 |
 | [08 実装範囲](docs/08_IMPLEMENTATION_STATUS.md) | 実装済み・未実装・端末未検証・MIDIの対応範囲 |
 | [09 判断記録](docs/09_DESIGN_DECISIONS.md) | 技術・操作・音源の選定理由とv0.1からの変更 |
-| [10 検証結果](docs/10_VALIDATION.md) | 実行環境、PASS/FAIL/未確認、証拠ファイル |
+| [10 初回の検証結果](docs/10_VALIDATION.md) | 初回実装の証拠 |
+| [11 作曲操作の改善](docs/11_DIRECT_COMPOSITION.md) | 改善前の問題、方式の比較、変更理由 |
+| [12 改善前後の検証](docs/12_DIRECT_VALIDATION.md) | 操作数・時間・回帰・実機未確認 |
 
 ## 起動・ビルド
 
@@ -50,7 +52,7 @@ npm run build  # 音源hash検証、型確認、本番dist、オフラインキ�
 npm run preview
 ```
 
-CIでは `npx playwright install --with-deps chromium` → `npm run test:browser` で本番ブラウザー試験も実行する。
+CIでは `npx playwright install --with-deps chromium` → `node scripts/prepare-ux-baseline.mjs` → `npm run test:browser` で本番ブラウザー試験も実行する。
 
 `/qa/` はブラウザー統合試験画面。「検証を実行」で合成タッチ、実サンプル出力、Worker保存、MIDI往復、10,000音を確認しJSONを取得できる。テスト用作品だけを生成・除去する。再実行時はページを再読込する。
 
@@ -60,10 +62,10 @@ CIでは `npx playwright install --with-deps chromium` → `npm run test:browser
 
 1. 空白をタップして音を置き、つかんで動かす。右端で長さを調整。
 2. ▶で聴く。下部の声部を「伴奏」にすると左手の音も同じ画面に置ける。
-3. 複数音は空白の長押しから囲む。選択した状態で「ループ」を押すと、その部分を繰り返す。
+3. 複数音は時間目盛りを横にドラッグして選ぶ。下の「聴く」で試聴、「複製」で続ける。「ループ」でその部分を繰り返す。
 4. 自動保存の表示を確認し、次回は同じ場所から再開。「曲の設定」からMIDIまたは完全な作品ファイルを出力。
 
-短い音符を伸ばすには長押しで選んで、外側の丸いハンドルを引く。「曲の設定→作例を開く」で4小節の曲も試せる。
+置いた音・動かした音はそのまま選択される。既存音は「選ぶ」→タップでも選べる。短い音符は左の丸で移動、右の丸で伸縮。「詳細」は必要なときだけ開く。長押しの既存経路も使える。「曲の設定→作例を開く」で4小節の曲も試せる。
 
 ## 配布
 
@@ -72,12 +74,13 @@ CIでは `npx playwright install --with-deps chromium` → `npm run test:browser
 GitHub Pagesは作業開始時点では未有効。Pagesを使う場合、リポジトリの **Settings → Pages → Source: GitHub Actions** が必要。PRは自動マージしない。試用ページとPRの実際の公開結果は検証記録に記す。
 
 - [試用ページ（ChatGPTログインが必要）](https://ttropiano-compose.ibukioike2009.chatgpt.site)
-- [実装PR #1](https://github.com/totoro0419/TtroPiano/pull/1)
-- [本番ブラウザー・オフライン試験の成功記録](https://github.com/totoro0419/TtroPiano/actions/runs/40120289169)
+- [初回実装PR #1](https://github.com/totoro0419/TtroPiano/pull/1)
+- [作曲操作の改善PR #2（#1を基準）](https://github.com/totoro0419/TtroPiano/pull/2)
+- [最新の比較・本番ブラウザー・オフライン試験](https://github.com/totoro0419/TtroPiano/actions/runs/40166263294)
 
 作品は端末内のみ。ブラウザーのサイトデータを削除すると作品も消えるため、長く残す作品は `.ttropiano` ファイルにも書き出せる。音符/声部/別案/演奏表現/視点をまとめて保持する。
 
-## 初期の主要操作案
+## 主な操作
 
 | 動作 | 結果 |
 | --- | --- |
@@ -87,12 +90,15 @@ GitHub Pagesは作業開始時点では未有効。Pagesを使う場合、リポ
 | 音符の右端をドラッグ | 音の長さを変更 |
 | 空白をドラッグ | パン（画面移動） |
 | 2本指を動かす／開閉 | 音符の上からでもパン／ズーム |
-| 音符を長押し | 選択／詳細アクション |
+| 音符を長押し | 選択／詳細アクション（従来の入口） |
+| 入力・移動・伸縮後 | 編集した音を選択。空白への次のタップも追加 |
+| 「選ぶ」→タップ／囲む | 待たずに単音／範囲選択 |
+| 時間目盛りを横ドラッグ | 区間内の音符を選択 |
 | 空白を長押し→ドラッグ | 範囲選択 |
 | 鍵盤を押す | プレビュー発音 |
 | 時間目盛りをタップ | 再生位置指定 |
 
-**注意:** 「タップで削除」は意図的に残した仮仕様だが誤操作の可能性がある。ジェスチャー実験で削除率と操作時間を比較し、必要なら標準動作を変更する。音符を消す前に長押しが必須になる設計は避ける。
+**タップ削除は維持。** 誤削除はUndoで復元できる。実機での誤削除率と初見の使いやすさは未確認。詳細な方式比較は [11](docs/11_DIRECT_COMPOSITION.md)。
 
 ## ここまでの状態
 
