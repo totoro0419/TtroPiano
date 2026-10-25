@@ -166,8 +166,6 @@ test('always-visible length palette changes input duration with one press, synch
   await expect(page.locator('#selection-count')).toHaveText('1音');
   await palette.locator('[data-note-length="1920"]').click();
   await roll.click({position:{x:245,y:175}});
-  const durations=await page.evaluate(() => JSON.parse(localStorage.getItem('__test-duration-dump')||'null'));
-  void durations; // New notes are checked by the selected note's precision field below.
   await page.locator('#quick-details').click();
   await expect(page.locator('#precision-form input[name="length"]')).toHaveValue('2');
   await page.getByRole('button',{name:'パネルを閉じる'}).click();
