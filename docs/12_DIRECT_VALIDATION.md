@@ -2,7 +2,7 @@
 
 2026-10-25 JST。検証済みコミット `ebb1ef6e11df7f472f4d7cd375de43c38fb49a91`。後続の記録・画像のコミットは実装を変えない。初回のPR #1の検証記録は [10](10_VALIDATION.md)、変更理由と現行操作は [11](11_DIRECT_COMPOSITION.md)。
 
-[改善PR #2](https://github.com/totoro0419/TtroPiano/pull/2) / [成功したCI](https://github.com/totoro0419/TtroPiano/actions/runs/40166263294) / [試用ページ（ChatGPTログインが必要）](https://ttropiano-compose.ibukioike2009.chatgpt.site)
+[改善PR #2](https://github.com/totoro0419/TtroPiano/pull/2) / [成功したCI](https://github.com/totoro0419/TtroPiano/actions/runs/40166263294) / [公開アプリ（ログイン不要）](https://ttropiano-compose.ibukioike2009.chatgpt.site)
 
 ## 試験条件と数値の意味
 
@@ -69,7 +69,8 @@
 | 320/390/768/834/1024/1366pxと回転相当 | PASS | ページはみ出しなし。通常選択でCanvasと操作欄の寸法を変えない。電話幅ではフッター内スクロール |
 | キーボードによる数値編集とフォーカス復帰 | PASS | Enter入力→全選択→詳細→数値変更→閉じてCanvasへ復帰 |
 | 通知と音符の重なり | PASS | 通知を全体図内へ配置し、音符領域に重ならない矩形を検査 |
-| 公開済みSiteの認証後の実操作 | 未確認 | 配布の成功と、認証済みの画面操作は別扱い |
+| 公開Siteのログイン不要起動・入力・再生開始 | PASS | 2026-10-25、公開設定へ変更後に画面で確認。PWA追加前の版。詳しくは [13](13_PUBLICATION_PWA.md) |
+| 公開Siteの再読込後の追加観察 | 実行不能 | 自動操作ブラウザーのURLポリシーが操作・観察を拒否。迂回せず中止 |
 | Android/iPad/Windows実機・Apple Pencil | 未確認 | 実機なし。上記のタッチ入力は実機PASSではない |
 | 指の正確性、短音符、長押し、2指切替の快適性 | 未確認 | 実機による人の評価が必要 |
 | 初見で4小節を作る理解・誤削除・迷い | 未確認 | 被験者テスト未実施 |

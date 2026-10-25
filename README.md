@@ -35,6 +35,7 @@
 | [10 初回の検証結果](docs/10_VALIDATION.md) | 初回実装の証拠 |
 | [11 作曲操作の改善](docs/11_DIRECT_COMPOSITION.md) | 改善前の問題、方式の比較、変更理由 |
 | [12 改善前後の検証](docs/12_DIRECT_VALIDATION.md) | 操作数・時間・回帰・実機未確認 |
+| [13 公開・PWA](docs/13_PUBLICATION_PWA.md) | ログイン不要の公開、ホーム画面追加、オフライン |
 
 ## 起動・ビルド
 
@@ -69,14 +70,18 @@ CIでは `npx playwright install --with-deps chromium` → `node scripts/prepare
 
 ## 配布
 
+**公開URL：https://ttropiano-compose.ibukioike2009.chatgpt.site/**（ログイン不要）。実装コードは `improvement/direct-composition-2026-10-25` に保存。PR #1/#2は未マージ。
+
+PWAとしてホーム画面へ追加できる構成です。「曲の設定 → ホーム画面に追加」から、対応ブラウザーの追加画面または手順を開けます。初回は接続し、「オフライン準備完了」を確認すると音符編集・保存・ピアノ再生をオフラインで使えます。実機のインストール完了は未確認。
+
 静的Webアプリ。`dist/` をHTTPSの静的ホストへ配信できる。GitHub Actionsにテスト/ビルド、成果物、Pages用ワークフローを収録。
 
 GitHub Pagesは作業開始時点では未有効。Pagesを使う場合、リポジトリの **Settings → Pages → Source: GitHub Actions** が必要。PRは自動マージしない。試用ページとPRの実際の公開結果は検証記録に記す。
 
-- [試用ページ（ChatGPTログインが必要）](https://ttropiano-compose.ibukioike2009.chatgpt.site)
+- [公開アプリ（ログイン不要）](https://ttropiano-compose.ibukioike2009.chatgpt.site)
 - [初回実装PR #1](https://github.com/totoro0419/TtroPiano/pull/1)
 - [作曲操作の改善PR #2（#1を基準）](https://github.com/totoro0419/TtroPiano/pull/2)
-- [最新の比較・本番ブラウザー・オフライン試験](https://github.com/totoro0419/TtroPiano/actions/runs/40166263294)
+- [最新の比較・本番ブラウザー・オフライン試験](https://github.com/totoro0419/TtroPiano/actions/runs/40170722553)
 
 作品は端末内のみ。ブラウザーのサイトデータを削除すると作品も消えるため、長く残す作品は `.ttropiano` ファイルにも書き出せる。音符/声部/別案/演奏表現/視点をまとめて保持する。
 

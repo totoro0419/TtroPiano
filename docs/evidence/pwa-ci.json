@@ -1,0 +1,49 @@
+{
+  "run": 40170722553,
+  "code": "7a8e611360545be288d97e81df7f74e4fc5d5be8",
+  "tree": "e8934efb6bfd03f8cd68632de3791b0a448ec6da",
+  "status": "PASS",
+  "artifactSha256": "69a915153753fa5eed87655070284f82b84a5a77ffbfdbe94a124b2496621004",
+  "tests": [
+    {
+      "title": "production browser: 33 integrated scenarios, actual PCM, 10,000 notes",
+      "outcome": "expected",
+      "durationMs": 7186
+    },
+    {
+      "title": "native UI touch, saving, MIDI download, project download and MIDI file input",
+      "outcome": "expected",
+      "durationMs": 972
+    },
+    {
+      "title": "real offline: cached app, saved composition and piano samples survive network loss",
+      "outcome": "expected",
+      "durationMs": 578
+    },
+    {
+      "title": "pedal tail outlives the final written note without early transport stop",
+      "outcome": "expected",
+      "durationMs": 1940
+    },
+    {
+      "title": "before/after: 15 identical composition scenarios, 3 paired runs",
+      "outcome": "expected",
+      "durationMs": 32735
+    },
+    {
+      "title": "native touch: independent keyboard chord and interrupted note drag",
+      "outcome": "expected",
+      "durationMs": 718
+    },
+    {
+      "title": "selection keeps canvas and dock stable across tablet orientations; numeric keyboard route remains",
+      "outcome": "expected",
+      "durationMs": 1409
+    },
+    {
+      "title": "PWA manifest, decoded install icons, readiness and explicit install entry",
+      "outcome": "expected",
+      "durationMs": 455
+    }
+  ]
+}
