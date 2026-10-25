@@ -18,6 +18,7 @@ export class App {
   get editSound() { return this.session.editSound !== false; }
   pane: 'selection' | 'expression' | 'phrases' | null = null;
   lastTempos = '';
+  scrubWasPlaying = false; scrubOrigin = 0;
   destroyed = false;
   savedProposal?: PianoRoll['suspended'];
   installPrompt?: InstallPrompt;
@@ -38,9 +39,9 @@ export class App {
       <div class="header-end">${button('settings', '曲の設定', 'settings', 'quiet labeled')}</div>
     </header>
     <div class="overview"><span id="position" class="position">1.1</span><canvas id="overview" aria-label="曲全体。タップしてその位置へ移動" tabindex="0"></canvas><div id="toast" class="toast" role="status" hidden></div>${button('loop', 'ループ', 'loop', 'loop-button')}${button('phrase-pane', 'フレーズ', 'phrase', 'quiet labeled')}</div>
-    <main class="workspace"><section class="roll-area" aria-label="ピアノロール"><canvas id="roll" tabindex="0" aria-label="音符エディター。空白タップで音符追加、音符タップで削除、ドラッグで移動、右端で伸縮、選ぶボタンまたは目盛りドラッグで選択、2本指で移動と拡大。キーボード操作はヘルプ参照。"></canvas></section><aside id="inspector" class="inspector" hidden aria-label="音符と演奏表現"></aside></main>
+    <main class="workspace"><section class="roll-area" aria-label="ピアノロール"><canvas id="roll" tabindex="0" aria-label="音符エディター。空白タップで音符追加、音符タップで削除、ドラッグで移動、右端で伸縮、選ぶボタンまたはShift＋目盛りドラッグで範囲選択。目盛りドラッグで再生位置移動、2本指タップでUndo、2本指移動でパン・ズーム。キーボード操作はヘルプ参照。"></canvas></section><aside id="inspector" class="inspector" hidden aria-label="音符と演奏表現"></aside></main>
     <div id="pending-edit" class="pending-edit" hidden role="status"><span>2本指に切替 · 音符の変更を保留中</span><button id="apply-pending">変更を適用</button><button id="discard-pending">取消</button></div>
-    <footer class="bottombar"><div class="quick-actions" role="group" aria-label="選択した音符の操作">${button('pick-select', '選ぶ')}<span id="selection-count" aria-live="polite">0音</span>${button('quick-listen', '聴く', 'play')}${button('quick-duplicate', '複製', 'copy')}${button('quick-group', 'まとめる')}${button('quick-details', '詳細')}</div><span class="footer-spacer"></span><label class="part-control"><i id="part-dot"></i><select id="active-part" aria-label="入力する声部"></select></label>${button('expression', '表現', '', 'quiet')}<label class="compact-control"><span>音の長さ</span><select id="note-length" aria-label="新しい音符の長さ"><option value="240">¼拍</option><option value="480">½拍</option><option value="960" selected>1拍</option><option value="1920">2拍</option><option value="3840">4拍</option><option value="120">⅛拍</option><option value="320">⅓拍</option></select></label><label class="compact-control"><span>吸着</span><select id="snap" aria-label="拍グリッド吸着"><option value="0">なし</option><option value="120">⅛拍</option><option value="240" selected>¼拍</option><option value="480">½拍</option><option value="960">1拍</option><option value="320">⅓拍</option></select></label>${button('fit', '全体', 'fit', 'quiet labeled')}<div class="zoom-controls"><button id="zoom-out" title="縮小" aria-label="縮小">−</button><button id="zoom-in" title="拡大" aria-label="拡大">＋</button></div><button id="help" class="help-button" title="操作のヒント" aria-label="操作のヒント">?</button></footer>
+    <footer class="bottombar"><div id="duration-palette" class="duration-palette" role="group" aria-label="新しい音符の長さ"><span class="duration-label">長さ</span><button type="button" class="duration-choice" data-note-length="240" aria-label="新しい音符の長さを¼拍にする" aria-pressed="false">¼</button><button type="button" class="duration-choice" data-note-length="480" aria-label="新しい音符の長さを½拍にする" aria-pressed="false">½</button><button type="button" class="duration-choice" data-note-length="960" aria-label="新しい音符の長さを1拍にする" aria-pressed="false">1</button><button type="button" class="duration-choice" data-note-length="1920" aria-label="新しい音符の長さを2拍にする" aria-pressed="false">2</button><button type="button" class="duration-choice" data-note-length="3840" aria-label="新しい音符の長さを4拍にする" aria-pressed="false">4</button><output id="duration-current" class="duration-current" aria-live="polite">1拍</output></div><div class="footer-scroll"><div class="quick-actions" role="group" aria-label="選択した音符の操作">${button('pick-select', '選ぶ')}<span id="selection-count" aria-live="polite">0音</span>${button('quick-listen', '聴く', 'play')}${button('quick-duplicate', '複製', 'copy')}${button('quick-group', 'まとめる')}${button('quick-details', '詳細')}</div><span class="footer-spacer"></span><label class="part-control"><i id="part-dot"></i><select id="active-part" aria-label="入力する声部"></select></label>${button('expression', '表現', '', 'quiet')}<label class="compact-control"><span>音の長さ</span><select id="note-length" aria-label="新しい音符の長さ"><option value="240">¼拍</option><option value="480">½拍</option><option value="960" selected>1拍</option><option value="1920">2拍</option><option value="3840">4拍</option><option value="120">⅛拍</option><option value="320">⅓拍</option></select></label><label class="compact-control"><span>吸着</span><select id="snap" aria-label="拍グリッド吸着"><option value="0">なし</option><option value="120">⅛拍</option><option value="240" selected>¼拍</option><option value="480">½拍</option><option value="960">1拍</option><option value="320">⅓拍</option></select></label>${button('fit', '全体', 'fit', 'quiet labeled')}<div class="zoom-controls"><button id="zoom-out" title="縮小" aria-label="縮小">−</button><button id="zoom-in" title="拡大" aria-label="拡大">＋</button></div><button id="help" class="help-button" title="操作のヒント" aria-label="操作のヒント">?</button></div></footer>
     </div><main id="home" class="home-screen" aria-labelledby="home-title" tabindex="-1"></main>
     <div id="app-menu" class="app-menu" popover="auto" role="menu" aria-label="TtroPianoのメニュー"></div>
     <div id="floating" class="floating" popover="auto" role="dialog" aria-label="曲と操作の設定" tabindex="-1"></div>
@@ -64,7 +65,7 @@ export class App {
       if (row) { this.hasProject = true; this.session = this.safeSession(row.session, row.project); this.store.replace(row.project); if (row.recovered) this.notify('直前の正常な保存から復元しました。内容を確認してください。'); }
     } catch (error) { this.notify('端末内の作品を開けませんでした。' + (error as Error).message); }
     this.roll = new PianoRoll(this.$('#roll') as HTMLCanvasElement, this.store, () => this.session, {
-      changed: () => { this.saveView(); this.drawOverview(); }, audition: (pitch, velocity, held, keyId) => { if (held || this.editSound) void this.audition(pitch, velocity, held, keyId); }, release: keyId => this.release(keyId), seek: tick => { this.transport.seek(tick); this.roll.invalidate(); this.saveView(); }, dismiss: () => this.dismissFloating(), notify: m => this.notify(m),
+      changed: () => { this.saveView(); this.drawOverview(); }, audition: (pitch, velocity, held, keyId) => { if (held || this.editSound) void this.audition(pitch, velocity, held, keyId); }, release: keyId => this.release(keyId), seek: tick => { this.transport.seek(tick); this.roll.invalidate(); this.saveView(); }, scrub: (tick, phase) => this.scrub(tick, phase), undo: () => this.undo(), dismiss: () => this.dismissFloating(), notify: m => this.notify(m),
     });
     this.restorePending();
     this.roll.addEventListener('selection', () => { this.renderQuick(); if (this.pane === 'selection') this.renderPane(); });
@@ -127,6 +128,9 @@ export class App {
     click('expression', () => { this.pane = this.pane === 'expression' ? null : 'expression'; this.renderPane(); });
     click('phrase-pane', () => { this.pane = this.pane === 'phrases' ? null : 'phrases'; this.renderPane(); });
     click('loop', () => { const b = this.selected.length ? bounds(this.selected) : undefined; if (b && !(this.session.loop.enabled && this.session.loop.start === b.start && this.session.loop.end === b.end && !this.transport.preview)) this.runAction('loop'); else if (!this.session.loop.enabled) this.openFloating('loop'); else { this.session.loop.enabled = false; this.transport.changed(true); this.renderControls(); this.roll.invalidate(); this.saveView(); } });
+    for (const control of this.root.querySelectorAll<HTMLButtonElement>('[data-note-length]')) control.addEventListener('click', () => {
+      this.session.noteLength = Number(control.dataset.noteLength); this.renderControls(); this.roll.invalidate(); this.save();
+    });
     for (const key of ['active-part', 'note-length', 'snap']) this.$('#' + key).addEventListener('change', () => { const value = (this.$('#' + key) as HTMLSelectElement).value; if (key === 'active-part') this.session.activePart = value; if (key === 'note-length') this.session.noteLength = Number(value); if (key === 'snap') this.session.snap = Number(value); this.renderControls(); this.roll.invalidate(); this.saveView(); });
     const mini = this.$('#overview') as HTMLCanvasElement;
     mini.addEventListener('pointerdown', e => { if (this.dismissFloating()) return; const rect = mini.getBoundingClientRect(), tick = clamp((e.clientX - rect.left) / rect.width, 0, 1) * this.overviewEnd(); this.transport.seek(tick); this.session.view.startTick = Math.max(0, tick - (this.roll.width - KEY_WIDTH) / this.roll.view.beatWidth * PPQ / 2); this.roll.invalidate(); this.saveView(); });
@@ -150,10 +154,30 @@ export class App {
     select.innerHTML = p.parts.map(part => `<option value="${part.id}">${escape(part.name)}${part.hand === 'left' ? ' · 左手' : part.hand === 'right' ? ' · 右手' : ''}</option>`).join(''); select.value = this.session.activePart;
     this.$('#part-dot').style.backgroundColor = p.parts.find(x => x.id === this.session.activePart)!.color;
     (this.$('#note-length') as HTMLSelectElement).value = String(this.session.noteLength); (this.$('#snap') as HTMLSelectElement).value = String(this.session.snap);
+    for (const control of this.root.querySelectorAll<HTMLButtonElement>('[data-note-length]')) control.setAttribute('aria-pressed', String(Number(control.dataset.noteLength) === this.session.noteLength));
+    const label = (this.$('#note-length') as HTMLSelectElement).selectedOptions[0]?.textContent || `${this.session.noteLength / PPQ}拍`;
+    this.$('#duration-current').textContent = label;
     this.$('#loop').setAttribute('aria-pressed', String(this.session.loop.enabled)); this.$('#expression').setAttribute('aria-expanded', String(this.pane === 'expression')); this.renderPosition();
     this.renderQuick();
   }
   undo() { if (this.roll.suspended) this.roll.discardSuspended(); else this.store.undo(); }
+  scrub(tick: number, phase: 'start' | 'move' | 'end' | 'cancel') {
+    if (phase === 'start') {
+      this.scrubWasPlaying = this.transport.playing;
+      this.transport.pause(); this.scrubOrigin = this.session.cursor;
+      this.transport.preview = undefined;
+    }
+    if (phase === 'cancel') {
+      this.transport.seek(this.scrubOrigin);
+      if (this.scrubWasPlaying) void this.transport.start();
+      this.scrubWasPlaying = false;
+    } else if (phase === 'end') {
+      this.transport.seek(tick);
+      if (this.scrubWasPlaying) void this.transport.start();
+      this.scrubWasPlaying = false;
+    } else this.session.cursor = tick;
+    this.roll.invalidate(); this.saveView();
+  }
   renderQuick() {
     if (!this.roll) return; const count = this.roll.selected.size;
     this.$('#selection-count').textContent = `${count}音`; this.$('#pick-select').setAttribute('aria-pressed', String(this.roll.picking)); this.$('#pick-select').title = this.roll.picking ? '次の音符をタップ、または空白を囲む。もう一度押すと取消' : '音符または範囲を、待たずに選ぶ';
@@ -189,7 +213,7 @@ export class App {
     const el = this.$('#floating'), wasOpen = el.matches(':popover-open'); if (wasOpen && el.dataset.kind === kind) { el.hidePopover(); return; } el.dataset.kind = kind;
     const p = this.store.project, meter = p.meters.findLast(e => e.tick <= this.session.cursor) ?? p.meters[0], tempo = new TempoMap(p.tempos).atTick(this.session.cursor).bpm;
     el.innerHTML = `<div class="pane-heading"><h2>${kind === 'help' ? '音楽に、直接ふれる。' : kind === 'loop' ? '聴きたい範囲' : kind === 'about' ? 'TtroPianoについて' : '曲の設定'}</h2><button data-close aria-label="閉じる">${icon('close')}</button></div>`;
-    if (kind === 'help') el.insertAdjacentHTML('beforeend', `<div class="help-copy"><dl><dt>音を置く / 消す</dt><dd>空白 / 音符をタップ。間違えたら ↶ で戻せます。</dd><dt>動かす / 伸ばす</dt><dd>音符をつかむ / 右端を引く。短い音は置いた直後、または「選ぶ」で触れると大きな丸いハンドルが現れます。長押しでも選べます。</dd><dt>移動 / 拡大</dt><dd>空白をドラッグ / 2本指で動かす・開閉。音符の上からも操作できます。</dd><dt>まとめて編集</dt><dd>時間目盛りを横にドラッグすると、その区間の音を選べます。「選ぶ」→音符をタップ、または空白を囲む方法もあります。下の「詳細」で数値・和音・別案を編集。長押しも引き続き使えます。</dd><dt>聴く</dt><dd>鍵盤は複数指で和音を試聴できます。目盛りのタップで再生位置を指定。選んで「聴く」で部分再生、「ループ」で繰り返します。入力音は曲の設定で消せます。</dd><dt>キーボード</dt><dd>Space：再生/一時停止 · Ctrl/⌘ Z：Undo · Shift Z：Redo · A：全音選択 · C/V：コピー/貼付 · D：複製。選択後の矢印：移動、Shift＋上下：オクターブ。Delete：削除。未選択の矢印：入力する拍と音高を指定、Enter：音符を追加（初期C4）。</dd><dt>保存とオフライン</dt><dd>作品はこの端末に自動保存。サイトのデータを消すと作品も消えます。「作品ファイル」で外部に残せます。初回は接続して音源を保存してください。</dd></dl><p class="muted">タップ削除の初見での使いやすさ、Android/iPad実機の音声遅延は未検証です。</p></div>`);
+    if (kind === 'help') el.insertAdjacentHTML('beforeend', `<div class="help-copy"><dl><dt>音を置く / 消す</dt><dd>空白 / 音符をタップ。下部の常設「長さ」パレットで次に置く音の長さを1タップで変更できます（選択中の既存音符の長さは変えません）。間違えたら ↶ で戻せます。</dd><dt>動かす / 伸ばす</dt><dd>音符をつかむ / 右端を引く。短い音は置いた直後、または「選ぶ」で触れると大きな丸いハンドルが現れます。長押しでも選べます。</dd><dt>移動 / 拡大</dt><dd>空白をドラッグ / 2本指で動かす・開閉。音符の上からも操作できます。2本指で軽くタップするとUndo（移動やピンチでは発動しません）。</dd><dt>まとめて編集</dt><dd>「選ぶ」を押してから時間目盛りをドラッグするか、PCではShift＋目盛りドラッグで、その区間の音を選べます。「選ぶ」→音符をタップ、または空白を囲む方法もあります。下の「詳細」で数値・和音・別案を編集。長押しも引き続き使えます。</dd><dt>聴く</dt><dd>鍵盤は複数指で和音を試聴できます。時間目盛りのタップ・左右ドラッグで再生位置を指定。再生中にドラッグすると一時停止し、離すと新しい位置から再生します。選んで「聴く」で部分再生、「ループ」で繰り返します。入力音は曲の設定で消せます。</dd><dt>キーボード</dt><dd>Space：再生/一時停止 · Ctrl/⌘ Z：Undo · Shift Z：Redo · A：全音選択 · C/V：コピー/貼付 · D：複製。選択後の矢印：移動、Shift＋上下：オクターブ。Delete：削除。未選択の矢印：入力する拍と音高を指定、Enter：音符を追加（初期C4）。</dd><dt>保存とオフライン</dt><dd>作品はこの端末に自動保存。サイトのデータを消すと作品も消えます。「作品ファイル」で外部に残せます。初回は接続して音源を保存してください。</dd></dl><p class="muted">タップ削除の初見での使いやすさ、Android/iPad実機の音声遅延は未検証です。</p></div>`);
     else if (kind === 'about') el.insertAdjacentHTML('beforeend', `<div class="about-copy"><span class="about-mark">${icon('piano',36)}</span><h3>TtroPiano</h3><p>音を置いて、動かして、聴く。<br>思いついた音を、そのまま曲に。</p><p class="muted small">タブレットのためのピアノ作曲アプリ。作品はこの端末に自動保存されます。</p><a href="https://github.com/totoro0419/TtroPiano" target="_blank" rel="noopener">ソースコードと更新内容</a><a href="./piano/LICENSE.txt" target="_blank" rel="noopener">ピアノ音源のライセンス</a></div>`);
     else if (kind === 'loop') {
       el.insertAdjacentHTML('beforeend', `<form id="loop-form" class="field-stack"><label>開始（1拍目から）<input name="start" type="number" min="1" step="0.25" value="${this.session.loop.start / PPQ + 1}" required></label><label>終了（この拍の直前まで）<input name="end" type="number" min="1.25" step="0.25" value="${this.session.loop.end / PPQ + 1}" required></label><button class="primary" type="submit">この範囲をループ</button></form>`);

@@ -5,10 +5,11 @@ interface Touch extends Point { id: number; kind: string }
 interface Gesture {
   action: 'pending' | 'move' | 'resize' | 'pan' | 'select' | 'selected' | 'scrub' | 'time-select' | 'pick';
   origin: Point; view: View; target?: Note; handle?: boolean; affordance?: boolean; moved: boolean; time: number;
-  originals: Note[]; selection: Set<string>; anchor?: { tick: number; pitch: number }; shift: boolean;
+  originals: Note[]; selection: Set<string>; anchor?: { tick: number; pitch: number }; shift: boolean; scrubbing?: boolean;
 }
+interface TwoFingerTap { started: number; starts: Map<number, Point>; valid: boolean }
 interface Navigation { view: View; center: Point; distance: number; tick: number; pitch: number }
-export interface RollOptions { changed: () => void; audition: (pitch: number, velocity: number, held?: boolean, keyId?: number) => void; release: (keyId?: number) => void; seek: (tick: number) => void; dismiss: () => boolean; notify: (message: string) => void }
+export interface RollOptions { changed: () => void; audition: (pitch: number, velocity: number, held?: boolean, keyId?: number) => void; release: (keyId?: number) => void; seek: (tick: number) => void; scrub: (tick: number, phase: 'start' | 'move' | 'end' | 'cancel') => void; undo: () => void; dismiss: () => boolean; notify: (message: string) => void }
 export class PianoRoll extends EventTarget {
   context: CanvasRenderingContext2D;
   width = 0; height = 0;
@@ -21,6 +22,7 @@ export class PianoRoll extends EventTarget {
   gesture?: Gesture;
   navigation?: Navigation;
   navigationLatch = false;
+  twoFingerTap?: TwoFingerTap;
   longTimer = 0;
   frame = 0;
   cursor = 0;
@@ -94,14 +96,27 @@ export class PianoRoll extends EventTarget {
     // Keys have independent lifetimes and never count as viewport fingers.
     if (p.x < KEY_WIDTH && p.y >= RULER_HEIGHT) { const pitch = this.pitchAt(p.y); this.keyPointers.set(e.pointerId, pitch); this.options.audition(pitch, 88, true, e.pointerId); this.paintNow('key-down'); return; }
     this.pointers.set(e.pointerId, { ...p, id: e.pointerId, kind: e.pointerType });
-    if (this.pointers.size >= 2) { this.beginNavigation(); return; }
+    if (this.pointers.size >= 2) {
+      // Two touch fingers tapped briefly = Undo. Movement, a third finger and an
+      // interrupted one-finger edit must never be mistaken for a tap.
+      if (this.pointers.size === 2 && !this.navigationLatch) {
+        const g = this.gesture, points = [...this.pointers.values()];
+        this.twoFingerTap = g && !g.moved && performance.now() - g.time <= 190
+          && points.every(t => t.kind === 'touch') && Math.hypot(points[0].x - g.origin.x, points[0].y - g.origin.y) <= 7
+          ? { started: performance.now(), starts: new Map(points.map(t => [t.id, { x: t.x, y: t.y }])), valid: true }
+          : undefined;
+      } else if (this.twoFingerTap) this.twoFingerTap.valid = false;
+      this.beginNavigation(); return;
+    }
     if (this.navigationLatch) return;
     this.lastInput = performance.now(); const hit = this.hit(p), selection = new Set(this.selected);
     let action: Gesture['action'] = 'pending';
     const phrase = this.phraseAt(p);
-    if (phrase) { this.select(new Set(phrase.noteIds)); action = 'selected'; }
-    else if (p.y < RULER_HEIGHT && p.x >= KEY_WIDTH) action = 'scrub';
-    else if (this.picking) { action = hit ? 'pick' : 'select'; if (!hit) this.select(new Set()); }
+    if (p.y < RULER_HEIGHT && p.x >= KEY_WIDTH) {
+      if (e.shiftKey || this.picking) action = 'time-select';
+      else if (phrase) { this.select(new Set(phrase.noteIds)); action = 'selected'; }
+      else action = 'scrub';
+    } else if (this.picking) { action = hit ? 'pick' : 'select'; if (!hit) this.select(new Set()); }
     this.gesture = { action, origin: p, view: { ...this.view }, target: hit?.note, handle: hit?.handle, affordance: hit?.affordance, moved: false, time: performance.now(), originals: hit ? this.selected.has(hit.note.id) ? this.store.project.notes.filter(n => this.selected.has(n.id)) : [hit.note] : [], selection, shift: e.shiftKey };
     if (action === 'pending') this.longTimer = window.setTimeout(() => {
       const g = this.gesture; if (!g || g.moved || this.pointers.size !== 1 || this.navigationLatch) return;
@@ -112,7 +127,9 @@ export class PianoRoll extends EventTarget {
     this.paintNow('down');
   }
   beginNavigation() {
-    clearTimeout(this.longTimer); this.suspendEdit(); this.draft.clear(); this.marquee = undefined;
+    clearTimeout(this.longTimer);
+    if (this.gesture?.scrubbing) this.options.scrub(this.session().cursor, 'end');
+    this.suspendEdit(); this.draft.clear(); this.marquee = undefined;
     this.gesture = undefined; this.navigationLatch = true;
     const [a, b] = [...this.pointers.values()], center = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
     this.navigation = { view: { ...this.view }, center, distance: Math.max(12, Math.hypot(a.x - b.x, a.y - b.y)), tick: this.tickAt(center.x), pitch: this.view.topPitch - (center.y - RULER_HEIGHT) / this.view.rowHeight };
@@ -122,6 +139,16 @@ export class PianoRoll extends EventTarget {
     if (this.keyPointers.has(e.pointerId)) { e.preventDefault(); const p = this.point(e), pitch = this.pitchAt(p.y); if (p.x < 0 || p.x >= KEY_WIDTH || p.y < RULER_HEIGHT || p.y > this.height) { this.options.release(e.pointerId); this.keyPointers.set(e.pointerId, -1); } else if (pitch !== this.keyPointers.get(e.pointerId)) { this.options.release(e.pointerId); this.keyPointers.set(e.pointerId, pitch); this.options.audition(pitch, 88, true, e.pointerId); } this.paintNow('key-move'); return; }
     if (!this.pointers.has(e.pointerId)) return; e.preventDefault(); this.lastInput = performance.now();
     const p = this.point(e); this.pointers.set(e.pointerId, { ...p, id: e.pointerId, kind: e.pointerType });
+    if (this.twoFingerTap?.valid) {
+      const start = this.twoFingerTap.starts.get(e.pointerId);
+      if (!start || Math.hypot(p.x - start.x, p.y - start.y) > 8) this.twoFingerTap.valid = false;
+      if (this.navigation && this.pointers.size === 2) {
+        const [a, b] = [...this.pointers.values()];
+        const center = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        if (Math.hypot(center.x - this.navigation.center.x, center.y - this.navigation.center.y) > 8
+          || Math.abs(Math.hypot(a.x - b.x, a.y - b.y) / this.navigation.distance - 1) > .05) this.twoFingerTap.valid = false;
+      }
+    }
     if (this.navigationLatch) {
       if (this.pointers.size >= 2 && this.navigation) {
         const [a, b] = [...this.pointers.values()], n = this.navigation, center = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, scale = Math.hypot(a.x - b.x, a.y - b.y) / n.distance;
@@ -134,7 +161,13 @@ export class PianoRoll extends EventTarget {
     const dx = p.x - g.origin.x, dy = p.y - g.origin.y, distance = Math.hypot(dx, dy);
     const threshold = e.pointerType === 'mouse' || e.pointerType === 'pen' ? 4 : 8;
     if (distance > threshold && !g.moved) { g.moved = true; clearTimeout(this.longTimer); if (g.action === 'pending') g.action = g.target ? g.handle ? 'resize' : 'move' : 'pan'; }
-    if (g.moved && g.action === 'scrub') g.action = 'time-select';
+    // Dragging the ruler moves the playhead. Shift+drag or explicit picking
+    // retains the former time-range selection workflow.
+    if (g.moved && g.action === 'selected' && g.origin.y < RULER_HEIGHT) g.action = 'scrub';
+    if (g.action === 'scrub' && g.moved) {
+      this.options.scrub(clamp(Math.round(this.tickAt(p.x)), 0, MAX_TICK), g.scrubbing ? 'move' : 'start');
+      g.scrubbing = true;
+    }
     if (g.action === 'pan') { this.view.startTick = g.view.startTick - dx / g.view.beatWidth * PPQ; this.view.topPitch = g.view.topPitch + dy / g.view.rowHeight; this.constrain(); this.options.changed(); }
     if (g.action === 'move' && g.target) {
       const b = bounds(g.originals), dt = snapTick(g.target.startTick + dx / this.view.beatWidth * PPQ, this.session().snap) - g.target.startTick, dp = Math.round(-dy / this.view.rowHeight);
@@ -158,7 +191,14 @@ export class PianoRoll extends EventTarget {
   up(e: PointerEvent) {
     if (this.keyPointers.has(e.pointerId)) { e.preventDefault(); this.keyPointers.delete(e.pointerId); this.options.release(e.pointerId); this.paintNow('key-up'); return; }
     if (!this.pointers.has(e.pointerId)) return; e.preventDefault(); clearTimeout(this.longTimer); const p = this.point(e); this.pointers.delete(e.pointerId);
-    if (this.navigationLatch) { if (!this.pointers.size) { this.navigation = undefined; this.navigationLatch = false; } else if (this.pointers.size >= 2) this.beginNavigation(); this.invalidate(); this.dispatchEvent(new Event('selection')); this.options.changed(); return; }
+    if (this.navigationLatch) {
+      const undo = !this.pointers.size && !!this.twoFingerTap?.valid && performance.now() - this.twoFingerTap.started <= 280;
+      if (!this.pointers.size) { this.navigation = undefined; this.navigationLatch = false; this.twoFingerTap = undefined; }
+      else if (this.pointers.size >= 2) this.beginNavigation();
+      this.invalidate(); this.dispatchEvent(new Event('selection')); this.options.changed();
+      if (undo) this.options.undo();
+      return;
+    }
     const g = this.gesture; this.gesture = undefined; if (!g) return;
     try {
       if ((g.action === 'move' || g.action === 'resize') && this.draft.size) {
@@ -175,12 +215,16 @@ export class PianoRoll extends EventTarget {
         }
       } else if (g.action === 'pick' && g.target) this.select(new Set([g.target.id]));
       else if (g.action === 'select' || g.action === 'time-select') this.dispatchEvent(new Event('selection'));
-      else if (g.action === 'scrub') this.options.seek(snapTick(this.tickAt(p.x), this.session().snap));
+      else if (g.action === 'scrub') {
+        const tick = clamp(Math.round(this.tickAt(p.x)), 0, MAX_TICK);
+        if (g.scrubbing) this.options.scrub(tick, 'end');
+        else this.options.seek(snapTick(tick, this.session().snap));
+      }
       this.picking = false; this.dispatchEvent(new Event('selection'));
     } catch (error) { this.options.notify(error instanceof Error ? error.message : String(error)); }
     this.draft.clear(); this.marquee = undefined; this.paintNow('up'); this.options.changed();
   }
-  cancel(releaseKeys = true, preserveSuspended = false) { clearTimeout(this.longTimer); this.gesture = undefined; this.draft.clear(); this.marquee = undefined; this.pointers.clear(); this.navigation = undefined; this.navigationLatch = false; this.picking = false; if (!preserveSuspended) this.suspended = undefined; if (releaseKeys) { this.options.release(); this.keyPointers.clear(); } this.invalidate(); }
+  cancel(releaseKeys = true, preserveSuspended = false) { if (this.gesture?.scrubbing) this.options.scrub(this.session().cursor, 'cancel'); clearTimeout(this.longTimer); this.twoFingerTap = undefined; this.gesture = undefined; this.draft.clear(); this.marquee = undefined; this.pointers.clear(); this.navigation = undefined; this.navigationLatch = false; this.picking = false; if (!preserveSuspended) this.suspended = undefined; if (releaseKeys) { this.options.release(); this.keyPointers.clear(); } this.invalidate(); }
   zoom(scale: number, center: Point = { x: this.width / 2, y: this.height / 2 }) { const tick = this.tickAt(center.x), pitch = this.view.topPitch - (center.y - RULER_HEIGHT) / this.view.rowHeight; this.view.beatWidth = clamp(this.view.beatWidth * scale, 14, 240); this.view.rowHeight = clamp(this.view.rowHeight * scale, 7, 42); this.view.startTick = tick - (center.x - KEY_WIDTH) / this.view.beatWidth * PPQ; this.view.topPitch = pitch + (center.y - RULER_HEIGHT) / this.view.rowHeight; this.constrain(); this.paintNow('zoom'); this.options.changed(); }
   fit(notes = this.store.project.notes) { if (!notes.length) { this.view.startTick = 0; this.view.topPitch = 84; this.view.beatWidth = 56; this.view.rowHeight = 20; } else { const b = bounds(notes); this.view.startTick = Math.max(0, b.start - PPQ / 2); this.view.beatWidth = clamp((this.width - KEY_WIDTH - 36) / ((b.end - this.view.startTick) / PPQ + 1), 14, 180); this.view.rowHeight = clamp((this.height - RULER_HEIGHT) / Math.max(20, b.high - b.low + 5), 7, 26); this.view.topPitch = Math.min(127, b.high + 2); } this.constrain(); this.invalidate(); this.options.changed(); }
   constrain() { this.view.startTick = clamp(this.view.startTick, 0, MAX_TICK - PPQ * 100); this.view.topPitch = clamp(this.view.topPitch, Math.min(127, (this.height - RULER_HEIGHT) / this.view.rowHeight - 1), 127); }

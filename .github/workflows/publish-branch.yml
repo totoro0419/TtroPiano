@@ -1,0 +1,43 @@
+name: Publish verified TtroPiano to gh-pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: publish-ttropiano-gh-pages
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Publish compiled app to the currently configured gh-pages branch
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          node -e "const fs=require('node:fs');fs.writeFileSync('dist/release.json',JSON.stringify({application:'TtroPiano',source_commit:process.env.SOURCE_SHA,release:'main branch production build',published_by:'github-actions'},null,2)+'\\n')"
+          touch dist/.nojekyll
+          git fetch origin gh-pages
+          git worktree add --detach .deploy origin/gh-pages
+          cd .deploy
+          git rm -r --quiet --ignore-unmatch .
+          cp -a ../dist/. .
+          git add -A
+          if git diff --cached --quiet; then echo "No changes to published files"; exit 0; fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "Publish TtroPiano from ${SOURCE_SHA}"
+          git push origin HEAD:gh-pages
+      # GITHUB_TOKEN commits do not themselves trigger a Pages build.
+      - name: Explicitly request GitHub Pages branch build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${GITHUB_REPOSITORY}/pages/builds"
