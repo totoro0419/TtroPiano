@@ -36,6 +36,7 @@
 | [11 作曲操作の改善](docs/11_DIRECT_COMPOSITION.md) | 改善前の問題、方式の比較、変更理由 |
 | [12 改善前後の検証](docs/12_DIRECT_VALIDATION.md) | 操作数・時間・回帰・実機未確認 |
 | [13 公開・PWA](docs/13_PUBLICATION_PWA.md) | ログイン不要の公開、ホーム画面追加、オフライン |
+| [14 GitHub Pages](docs/14_GITHUB_PAGES.md) | GitHubの公開ブランチ・有効化・配信確認の状態 |
 
 ## 起動・ビルド
 
@@ -76,7 +77,9 @@ PWAとしてホーム画面へ追加できる構成です。「曲の設定 → 
 
 静的Webアプリ。`dist/` をHTTPSの静的ホストへ配信できる。GitHub Actionsにテスト/ビルド、成果物、Pages用ワークフローを収録。
 
-GitHub Pagesは作業開始時点では未有効。Pagesを使う場合、リポジトリの **Settings → Pages → Source: GitHub Actions** が必要。PRは自動マージしない。試用ページとPRの実際の公開結果は検証記録に記す。
+GitHub Pages用の本番ファイルは `gh-pages` ブランチのルートに保存済み（PWAとピアノ音源を含む57ファイル、元ビルドとhash照合済み）。現在の公開方法は **Settings → Pages → Source: Deploy from a branch → Branch: gh-pages → /(root) → Save**。Pagesの有効化と公開URLでの起動確認は、[GitHub Pagesの記録](docs/14_GITHUB_PAGES.md)で状態を区別する。PRは自動マージしない。
+
+`.github/workflows/pages.yml` は、将来ソースを `main` に取り込んで Source を GitHub Actions に変更した後の自動公開用。現在の `gh-pages` からの公開とは別の経路で、未マージのまま実装を公開できる。
 
 - [公開アプリ（ログイン不要）](https://ttropiano-compose.ibukioike2009.chatgpt.site)
 - [初回実装PR #1](https://github.com/totoro0419/TtroPiano/pull/1)

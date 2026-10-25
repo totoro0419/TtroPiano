@@ -6,6 +6,8 @@
 
 実装コード：[GitHubの改善ブランチ](https://github.com/totoro0419/TtroPiano/tree/improvement/direct-composition-2026-10-25)。既存のPR #1/#2は未マージ。GitHub Pagesが有効になったという報告ではない。
 
+後続の「Git hubで公開して」に対応した公開ブランチとPagesの設定状況は [14 — GitHub Pages公開](14_GITHUB_PAGES.md) を参照。
+
 ## 公開状態
 
 所有者のみのアクセス制限を、URLを持つ人が訪問できる `public` へ変更した。公開設定の再取得でも `public`、policy revision 2を確認。[設定の記録](evidence/publication-access.json)。作品は引き続き訪問者ごとの端末内保存で、他人の作品を公開する変更ではない。
