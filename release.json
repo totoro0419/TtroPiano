@@ -1,9 +1,6 @@
 {
   "application": "TtroPiano",
-  "source_commit": "61ab29d83ae5d3bcc0711bc1a822af64826bc76a",
-  "source_tree": "5c48eb0f44bf9332fd9fc5dd3bd869498324fb70",
-  "pull_request": "https://github.com/totoro0419/TtroPiano/pull/4",
-  "ci_run": "https://github.com/totoro0419/TtroPiano/actions/runs/40183140754",
-  "service_worker_cache": "59522022dead8856",
-  "release": "Start page with resume, recent works and discreet install entry"
+  "source_commit": "3fcbf5b8ba3b59a506b08f35370684575f621247",
+  "release": "main branch production build",
+  "published_by": "github-actions"
 }
