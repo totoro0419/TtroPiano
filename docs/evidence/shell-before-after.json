@@ -1,0 +1,18 @@
+{
+  "baseline": "b890353e6caeed3353b859a6406caaa9afe01eb0",
+  "comparison": {
+    "before": {
+      "resizeSamples": 13,
+      "clearedBitmapObservations": 12,
+      "libraryRefreshOpenAttributeRemovals": 1
+    },
+    "after": {
+      "resizeSamples": 13,
+      "clearedBitmapObservations": 0,
+      "libraryRefreshOpenAttributeRemovals": 0
+    }
+  },
+  "limits": [
+    "Pre-paint ResizeObserver pixel probes, not a physical tablet or human perception test."
+  ]
+}

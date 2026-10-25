@@ -1,5 +1,5 @@
-import { audibleNotes, endTick, type Note, type Project, type Session } from './model';
-import { TempoMap, planWindow } from './time';
+import { audibleNotes, bounds, endTick, type Note, type Project, type Session } from './model';
+import { TempoMap, planWindow, effectiveEnd } from './time';
 interface Sample { file: string; root: number; layer: 'soft' | 'hard'; cents: number; bytes: number }
 interface Bank { samples: Sample[]; name: string; bytes: number }
 export const appRoot = new URL(document.querySelector<HTMLMetaElement>('meta[name="ttropiano-root"]')?.content ?? './', document.baseURI);
@@ -84,14 +84,23 @@ export class Transport extends EventTarget {
   generation = 0;
   requestGeneration = 0;
   scheduled = new Map<string, { time: number; voice?: Voice; cancelled: boolean }>();
+  preview?: { ids?: Set<string>; notes?: Note[]; start: number; end: number };
   constructor(public piano: Piano, public project: () => Project, public session: () => Session, public notify: (message: string) => void) { super(); this.map = new TempoMap(project().tempos); }
   async toggle() { if (this.playing || this.preparing) this.pause(); else await this.start(); }
+  playbackProject() { const p = this.project(); return this.preview ? { ...p, notes: this.preview.notes ?? p.notes.filter(n => this.preview!.ids!.has(n.id)) } : p; }
+  playbackLoop() { return this.preview ? { enabled: false, start: this.preview.start, end: this.preview.end } : this.session().loop; }
+  async startSelection(notes: Note[], detached = false) {
+    if (!notes.length) return; this.pause(); const p = this.project(), b = bounds(notes);
+    this.preview = { ...(detached ? { notes: structuredClone(notes) } : { ids: new Set(notes.map(n => n.id)) }), start: b.start, end: notes.reduce((end, n) => Math.max(end, effectiveEnd(p,n)), b.end) };
+    this.session().cursor = b.start; await this.start();
+  }
   async start() {
     const request = ++this.requestGeneration; this.preparing = true; this.dispatchEvent(new Event('state'));
     try {
-      const s = this.session(), p = this.project(); this.map = new TempoMap(p.tempos);
-      this.originTick = s.loop.enabled ? Math.max(s.loop.start, Math.min(s.cursor, s.loop.end - 1)) : s.cursor;
-      if (!s.loop.enabled && this.originTick >= endTick(p)) this.originTick = 0;
+      const s = this.session(), p = this.playbackProject(), loop = this.playbackLoop(); this.map = new TempoMap(p.tempos);
+      this.originTick = loop.enabled ? Math.max(loop.start, Math.min(s.cursor, loop.end - 1)) : s.cursor;
+      if (this.preview && (this.originTick < this.preview.start || this.originTick >= this.preview.end)) this.originTick = this.preview.start;
+      else if (!this.preview && !loop.enabled && this.originTick >= endTick(p)) this.originTick = 0;
       const seconds = this.map.seconds(this.originTick);
       await this.piano.prepare(audibleNotes(p).filter(n => n.startTick >= this.originTick && this.map.seconds(n.startTick) < seconds + 3));
       if (request !== this.requestGeneration) return;
@@ -101,14 +110,14 @@ export class Transport extends EventTarget {
   }
   position() {
     if (!this.playing) return this.session().cursor;
-    const seconds = Math.max(0, this.piano.context!.currentTime - this.baseTime), s = this.session();
+    const seconds = Math.max(0, this.piano.context!.currentTime - this.baseTime), loop = this.playbackLoop();
     let target = this.map.seconds(this.originTick) + seconds;
-    if (s.loop.enabled) { const a = this.map.seconds(s.loop.start), b = this.map.seconds(s.loop.end); if (target >= b && b > a) target = a + (target - b) % (b - a); }
+    if (loop.enabled) { const a = this.map.seconds(loop.start), b = this.map.seconds(loop.end); if (target >= b && b > a) target = a + (target - b) % (b - a); }
     return this.map.tick(target);
   }
   pause() { this.requestGeneration++; if (this.playing) this.session().cursor = Math.round(this.position()); this.playing = false; this.preparing = false; clearInterval(this.timer); this.generation++; this.piano.silence(); this.scheduled.clear(); this.dispatchEvent(new Event('state')); }
-  stop() { this.pause(); this.session().cursor = this.session().loop.enabled ? this.session().loop.start : 0; this.dispatchEvent(new Event('state')); }
-  seek(tick: number) { const wasPlaying = this.playing; this.pause(); this.session().cursor = Math.round(tick); if (wasPlaying) void this.start(); }
+  stop() { this.pause(); this.preview = undefined; this.session().cursor = this.session().loop.enabled ? this.session().loop.start : 0; this.dispatchEvent(new Event('state')); }
+  seek(tick: number) { const wasPlaying = this.playing; this.pause(); this.preview = undefined; this.session().cursor = Math.round(tick); if (wasPlaying) void this.start(); }
   changed(tempoChanged = false) {
     if (!this.playing) { this.map = new TempoMap(this.project().tempos); return; }
     if (tempoChanged) { const tick = this.position(); this.pause(); this.session().cursor = Math.round(tick); void this.start(); return; }
@@ -119,15 +128,15 @@ export class Transport extends EventTarget {
   }
   schedule() {
     if (!this.playing) return;
-    const p = this.project(), s = this.session(), elapsed = Math.max(0, this.piano.context!.currentTime - this.baseTime);
+    const p = this.playbackProject(), loop = this.playbackLoop(), elapsed = Math.max(0, this.piano.context!.currentTime - this.baseTime);
     const to = elapsed + .18, generation = this.generation;
-    for (const event of planWindow(p, audibleNotes(p), this.map, this.originTick, this.until, to, s.loop)) {
+    for (const event of planWindow(p, audibleNotes(p), this.map, this.originTick, this.until, to, loop)) {
       const key = event.cycle + ':' + event.note.id; if (this.scheduled.has(key)) continue;
       const entry = { time: event.time, voice: undefined as Voice | undefined, cancelled: false }; this.scheduled.set(key, entry);
       void this.piano.play(event.note.pitch, event.note.velocity, event.duration, this.baseTime + event.time, event.offset ?? 0).then(voice => { entry.voice = voice; if (entry.cancelled || generation !== this.generation || !this.playing) voice.cancel(); }).catch(e => { this.notify(e.message); this.pause(); });
     }
     this.until = to;
     for (const [key, x] of this.scheduled) if (elapsed - x.time > 60) this.scheduled.delete(key);
-    if (!s.loop.enabled && this.position() > endTick(p) + 600) this.pause();
+    if (!loop.enabled && this.position() > (this.preview?.end ?? endTick(p)) + 600) this.pause();
   }
 }

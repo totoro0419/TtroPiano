@@ -1,0 +1,39 @@
+{
+  "repository": "totoro0419/TtroPiano",
+  "date": "2026-10-25",
+  "branch": "gh-pages",
+  "commit": "932c3fa7f321e264087199b7424935c010db8ac5",
+  "tree": "2cba6264cf92302b429283bc28da18c11572aa99",
+  "sourceCommit": "4250908a772d920269c2409c64cebf6487127ef6",
+  "ciRun": "https://github.com/totoro0419/TtroPiano/actions/runs/40170722553",
+  "build": "PASS",
+  "remoteFiles": 57,
+  "remoteFileHashComparison": "PASS",
+  "noJekyll": true,
+  "mainModified": false,
+  "pullRequestsMerged": false,
+  "browserAuthentication": "端末メール認証が完了せず中断。再要求していない",
+  "pagesSettingsModified": false,
+  "pagesEnabled": "PASS",
+  "deployedBrowserTest": {
+    "startup": "PASS",
+    "twoNotesInputAndSaved": "PASS",
+    "playPauseState": "PASS",
+    "stop": "PASS",
+    "reloadRestoredTwoNotes": "PASS",
+    "offlineCacheReadyIncludingPianoSamples": "PASS",
+    "screenshot": "github-pages-editor.jpg",
+    "networkCut": "未確認",
+    "physicalSpeakerOutput": "未確認"
+  },
+  "physicalDeviceInstall": "未確認",
+  "pagesEnabledBy": "利用者の設定後にGitHub APIで確認",
+  "deployment": {
+    "runId": 40171519097,
+    "jobId": 121103185272,
+    "status": "success",
+    "url": "https://totoro0419.github.io/TtroPiano/",
+    "completedAt": "2026-10-25T07:06:43Z",
+    "headSha": "932c3fa7f321e264087199b7424935c010db8ac5"
+  }
+}

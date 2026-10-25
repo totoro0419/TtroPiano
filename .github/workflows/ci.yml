@@ -18,6 +18,8 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium
+      - run: node scripts/prepare-ux-baseline.mjs
+      - run: node scripts/prepare-shell-baseline.mjs
       - run: npm run test:browser
       - uses: actions/upload-artifact@v4
         with:

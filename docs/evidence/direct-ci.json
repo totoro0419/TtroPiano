@@ -1,0 +1,44 @@
+{
+  "run": 40166263294,
+  "code": "ebb1ef6e11df7f472f4d7cd375de43c38fb49a91",
+  "sourceTree": "337e49ce37c55f57c32d9e574108c11d2b68a332",
+  "status": "PASS",
+  "artifactSha256": "e2b8f0fdc891f8b548b024d439fd3d82cc3f20a113e8cb0919e726b8063de8ee",
+  "tests": [
+    {
+      "title": "production browser: 33 integrated scenarios, actual PCM, 10,000 notes",
+      "outcome": "expected",
+      "durationMs": 7273
+    },
+    {
+      "title": "native UI touch, saving, MIDI download, project download and MIDI file input",
+      "outcome": "expected",
+      "durationMs": 1010
+    },
+    {
+      "title": "real offline: cached app, saved composition and piano samples survive network loss",
+      "outcome": "expected",
+      "durationMs": 610
+    },
+    {
+      "title": "pedal tail outlives the final written note without early transport stop",
+      "outcome": "expected",
+      "durationMs": 1990
+    },
+    {
+      "title": "before/after: 15 identical composition scenarios, 3 paired runs",
+      "outcome": "expected",
+      "durationMs": 32837
+    },
+    {
+      "title": "native touch: independent keyboard chord and interrupted note drag",
+      "outcome": "expected",
+      "durationMs": 786
+    },
+    {
+      "title": "selection keeps canvas and dock stable across tablet orientations; numeric keyboard route remains",
+      "outcome": "expected",
+      "durationMs": 1451
+    }
+  ]
+}
