@@ -129,7 +129,7 @@ export class App {
     click('phrase-pane', () => { this.pane = this.pane === 'phrases' ? null : 'phrases'; this.renderPane(); });
     click('loop', () => { const b = this.selected.length ? bounds(this.selected) : undefined; if (b && !(this.session.loop.enabled && this.session.loop.start === b.start && this.session.loop.end === b.end && !this.transport.preview)) this.runAction('loop'); else if (!this.session.loop.enabled) this.openFloating('loop'); else { this.session.loop.enabled = false; this.transport.changed(true); this.renderControls(); this.roll.invalidate(); this.saveView(); } });
     for (const control of this.root.querySelectorAll<HTMLButtonElement>('[data-note-length]')) control.addEventListener('click', () => {
-      this.session.noteLength = Number(control.dataset.noteLength); this.renderControls(); this.roll.invalidate(); this.saveView();
+      this.session.noteLength = Number(control.dataset.noteLength); this.renderControls(); this.roll.invalidate(); this.save();
     });
     for (const key of ['active-part', 'note-length', 'snap']) this.$('#' + key).addEventListener('change', () => { const value = (this.$('#' + key) as HTMLSelectElement).value; if (key === 'active-part') this.session.activePart = value; if (key === 'note-length') this.session.noteLength = Number(value); if (key === 'snap') this.session.snap = Number(value); this.renderControls(); this.roll.invalidate(); this.saveView(); });
     const mini = this.$('#overview') as HTMLCanvasElement;
