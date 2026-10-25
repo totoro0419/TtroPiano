@@ -1,0 +1,8 @@
+{
+  "application": "TtroPiano",
+  "source_commit": "4250908a772d920269c2409c64cebf6487127ef6",
+  "verified_code_commit": "7a8e611360545be288d97e81df7f74e4fc5d5be8",
+  "ci_run": "https://github.com/totoro0419/TtroPiano/actions/runs/40170722553",
+  "service_worker_cache": "c705370ad110692d",
+  "purpose": "GitHub Pages production build; no work data or credentials included"
+}
