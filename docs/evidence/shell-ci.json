@@ -1,0 +1,85 @@
+{
+  "run": "https://github.com/totoro0419/TtroPiano/actions/runs/40173961057",
+  "testedHead": "d9521aaf5b655e3ec3552572ad06ded0cd4d132d",
+  "headTree": "9fae4d536dbc942bb67fe1283d407af257fd8601",
+  "stats": {
+    "total": 13,
+    "expected": 13,
+    "unexpected": 0,
+    "flaky": 0,
+    "skipped": 0,
+    "ok": true
+  },
+  "testResults": [
+    {
+      "name": "production browser: 33 integrated scenarios, actual PCM, 10,000 notes",
+      "outcome": "expected",
+      "durationMs": 7215
+    },
+    {
+      "name": "native UI touch, saving, MIDI download, project download and MIDI file input",
+      "outcome": "expected",
+      "durationMs": 941
+    },
+    {
+      "name": "real offline: cached app, saved composition and piano samples survive network loss",
+      "outcome": "expected",
+      "durationMs": 596
+    },
+    {
+      "name": "pedal tail outlives the final written note without early transport stop",
+      "outcome": "expected",
+      "durationMs": 1972
+    },
+    {
+      "name": "before/after: 15 identical composition scenarios, 3 paired runs",
+      "outcome": "expected",
+      "durationMs": 32718
+    },
+    {
+      "name": "native touch: independent keyboard chord and interrupted note drag",
+      "outcome": "expected",
+      "durationMs": 716
+    },
+    {
+      "name": "selection keeps canvas and dock stable across tablet orientations; numeric keyboard route remains",
+      "outcome": "expected",
+      "durationMs": 1406
+    },
+    {
+      "name": "PWA manifest, decoded install icons, readiness and explicit install entry",
+      "outcome": "expected",
+      "durationMs": 441
+    },
+    {
+      "name": "before/after: resized editor has no cleared presentation and library refresh never closes its modal",
+      "outcome": "expected",
+      "durationMs": 1864
+    },
+    {
+      "name": "app menu: keyboard, outside dismiss, direct routes, backup and unchanged canvas allocation",
+      "outcome": "expected",
+      "durationMs": 1235
+    },
+    {
+      "name": "library: search, sort, keyed refresh, rename, duplicate and project handoff stay coherent",
+      "outcome": "expected",
+      "durationMs": 1404
+    },
+    {
+      "name": "library: delayed loading can be dismissed; failed list retries without losing the composition",
+      "outcome": "expected",
+      "durationMs": 1325
+    },
+    {
+      "name": "navigation adapts to touch, narrow windows and large text without covering controls",
+      "outcome": "expected",
+      "durationMs": 1778
+    }
+  ],
+  "artifactSha256": "6e2a50eef513593c9fa9db5b3ce252f1f940ea3f241ecaea4389d29d39abf1a8",
+  "browserEvidenceArtifactId": 12590963262,
+  "physicalDevice": "未確認",
+  "unitTests": 16,
+  "browserTests": 13
+}

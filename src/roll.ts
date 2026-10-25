@@ -184,7 +184,20 @@ export class PianoRoll extends EventTarget {
   zoom(scale: number, center: Point = { x: this.width / 2, y: this.height / 2 }) { const tick = this.tickAt(center.x), pitch = this.view.topPitch - (center.y - RULER_HEIGHT) / this.view.rowHeight; this.view.beatWidth = clamp(this.view.beatWidth * scale, 14, 240); this.view.rowHeight = clamp(this.view.rowHeight * scale, 7, 42); this.view.startTick = tick - (center.x - KEY_WIDTH) / this.view.beatWidth * PPQ; this.view.topPitch = pitch + (center.y - RULER_HEIGHT) / this.view.rowHeight; this.constrain(); this.paintNow('zoom'); this.options.changed(); }
   fit(notes = this.store.project.notes) { if (!notes.length) { this.view.startTick = 0; this.view.topPitch = 84; this.view.beatWidth = 56; this.view.rowHeight = 20; } else { const b = bounds(notes); this.view.startTick = Math.max(0, b.start - PPQ / 2); this.view.beatWidth = clamp((this.width - KEY_WIDTH - 36) / ((b.end - this.view.startTick) / PPQ + 1), 14, 180); this.view.rowHeight = clamp((this.height - RULER_HEIGHT) / Math.max(20, b.high - b.low + 5), 7, 26); this.view.topPitch = Math.min(127, b.high + 2); } this.constrain(); this.invalidate(); this.options.changed(); }
   constrain() { this.view.startTick = clamp(this.view.startTick, 0, MAX_TICK - PPQ * 100); this.view.topPitch = clamp(this.view.topPitch, Math.min(127, (this.height - RULER_HEIGHT) / this.view.rowHeight - 1), 127); }
-  resize() { const rect = this.canvas.getBoundingClientRect(); this.width = rect.width; this.height = rect.height; const dpr = Math.min(window.devicePixelRatio || 1, 2); this.canvas.width = Math.round(this.width * dpr); this.canvas.height = Math.round(this.height * dpr); this.context.setTransform(dpr, 0, 0, dpr, 0, 0); this.constrain(); this.invalidate(); this.onResize?.(); }
+  resize() {
+    const rect = this.canvas.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const width = Math.round(rect.width * dpr), height = Math.round(rect.height * dpr);
+    if (rect.width <= 0 || rect.height <= 0) return;
+    if (this.width === rect.width && this.height === rect.height && this.canvas.width === width && this.canvas.height === height) return;
+    this.width = rect.width; this.height = rect.height;
+    // Intrinsic-size writes erase the bitmap, even when the value is unchanged.
+    // ResizeObserver runs after rAF: paint here, before the browser can present a cleared frame.
+    if (this.canvas.width !== width) this.canvas.width = width;
+    if (this.canvas.height !== height) this.canvas.height = height;
+    this.context.setTransform(dpr, 0, 0, dpr, 0, 0); this.constrain();
+    if (this.frame) { cancelAnimationFrame(this.frame); this.frame = 0; }
+    this.draw(); this.onResize?.();
+  }
   invalidate() { this.dirty = true; if (this.frame) return; this.frame = requestAnimationFrame(() => { this.frame = 0; this.draw(); }); }
   paintNow(kind: string) { const started = this.lastInput || performance.now(); this.draw(); this.metrics.push({ kind, ms: performance.now() - started, notes: this.store.project.notes.length }); if (this.metrics.length > 500) this.metrics.shift(); this.lastInput = 0; }
   draw() {
