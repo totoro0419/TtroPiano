@@ -86,8 +86,9 @@ test('native touch: independent keyboard chord and interrupted note drag', async
   await send('touchEnd',[b]); expect(await keyColor(a)).toEqual([200,184,227]); expect(await keyColor(b)).not.toEqual([200,184,227]);
   await send('touchEnd',[]); await expect(page.locator('#pending-edit')).toBeHidden();
   await page.touchscreen.tap(r.x+180,r.y+240); await expect(page.locator('#selection-count')).toHaveText('1音');
-  const note = {id:1,x:r.x+180,y:r.y+240}; await send('touchStart',[note]);
+  const note = {id:1,x:r.x+208,y:r.y+240}; await send('touchStart',[note]);
   const moved = {...note,x:note.x+56,y:note.y-20}; await send('touchMove',[moved]);
+  await expect.poll(()=>keyColor(moved)).not.toEqual([255,255,255]);
   const second = {id:2,x:r.x+450,y:r.y+300}; await send('touchStart',[moved,second]); await send('touchEnd',[second]); await send('touchEnd',[]);
   await expect(page.locator('#pending-edit')).toBeVisible(); await expect(page.locator('#selection-count')).toHaveText('1音');
   await expect(page.locator('#save-status')).toHaveText('この端末に保存済み'); await page.reload(); await expect(page.locator('#pending-edit')).toBeVisible();

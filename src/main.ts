@@ -15,6 +15,7 @@ export class App {
   pane: 'selection' | 'expression' | 'phrases' | null = null;
   lastTempos = '';
   destroyed = false;
+  savedProposal?: PianoRoll['suspended'];
   constructor(root: HTMLElement, public test = false) {
     this.root = root; root.classList.add('app-shell'); this.store = new ProjectStore(newProject()); this.session = initialSession(this.store.project);
     this.transport = new Transport(this.piano, () => this.store.project, () => this.session, message => this.notify(message));
@@ -103,8 +104,8 @@ export class App {
   }
   restorePending() { const pending = this.session.pendingEdit; if (pending) this.roll.suspended = { originals: pending.originals, draft: new Map(pending.draft.map(n => [n.id,n])), label: pending.label }; }
   syncPending() { if (this.roll.suspended) this.session.pendingEdit = { originals: this.roll.suspended.originals, draft: [...this.roll.suspended.draft.values()], label: this.roll.suspended.label }; else delete this.session.pendingEdit; }
-  save() { if (!this.roll) return; this.syncPending(); clearTimeout(this.lastSaveTimer); this.storage.save(this.store.project, this.session); if (!this.test) try { localStorage.setItem('ttropiano-last', this.store.project.id); } catch {} }
-  saveView() { clearTimeout(this.lastSaveTimer); this.lastSaveTimer = window.setTimeout(() => this.save(), 180); this.renderPosition(); }
+  save() { if (!this.roll) return; this.syncPending(); this.savedProposal = this.roll.suspended; clearTimeout(this.lastSaveTimer); this.storage.save(this.store.project, this.session); if (!this.test) try { localStorage.setItem('ttropiano-last', this.store.project.id); } catch {} }
+  saveView() { clearTimeout(this.lastSaveTimer); if (this.roll && this.savedProposal !== this.roll.suspended) this.save(); else this.lastSaveTimer = window.setTimeout(() => this.save(), 180); this.renderPosition(); }
   renderSave() { const el = this.$('#save-status'), s = this.storage.status; el.dataset.state = s; el.textContent = s === 'saved' ? 'この端末に保存済み' : s === 'saving' ? '保存中…' : '保存失敗 · 再試行'; el.title = s === 'error' ? this.storage.error : 'この端末への自動保存'; if (s === 'error') this.notify(this.storage.error + ' 「曲の設定」から作品ファイルを書き出せます。', 12000); }
   renderControls() {
     const p = this.store.project; this.$('#project-name').textContent = p.name;

@@ -4,7 +4,7 @@ interface Point { x: number; y: number }
 interface Touch extends Point { id: number; kind: string }
 interface Gesture {
   action: 'pending' | 'move' | 'resize' | 'pan' | 'select' | 'selected' | 'scrub' | 'time-select' | 'pick';
-  origin: Point; view: View; target?: Note; handle?: boolean; moved: boolean; time: number;
+  origin: Point; view: View; target?: Note; handle?: boolean; affordance?: boolean; moved: boolean; time: number;
   originals: Note[]; selection: Set<string>; anchor?: { tick: number; pitch: number }; shift: boolean;
 }
 interface Navigation { view: View; center: Point; distance: number; tick: number; pitch: number }
@@ -54,7 +54,7 @@ export class PianoRoll extends EventTarget {
   reindex() { this.noteById = new Map(this.store.project.notes.map(n => [n.id, n])); this.phraseRanges = this.store.project.phrases.map(f => { const ns = f.noteIds.map(id => this.noteById.get(id)).filter((n): n is Note => !!n); return {...f, ...bounds(ns)}; }).filter(f => f.noteIds.length); this.byPitch = Array.from({ length: 128 }, () => []); for (const n of this.store.project.notes) this.byPitch[n.pitch].push(n); for (const a of this.byPitch) a.sort((a, b) => a.startTick - b.startTick); }
   select(ids: Set<string>, announce = true) { this.selected = ids; if (announce) this.dispatchEvent(new Event('selection')); this.invalidate(); }
   pick() { this.picking = !this.picking; this.dispatchEvent(new Event('selection')); this.invalidate(); }
-  hit(p: Point): { note: Note; handle: boolean } | undefined {
+  hit(p: Point): { note: Note; handle: boolean; affordance?: boolean } | undefined {
     if (p.x < KEY_WIDTH || p.y < RULER_HEIGHT) return;
     // Visible note bodies always win over a neighbouring note's expanded handle.
     for (const pitch of [this.pitchAt(p.y), this.pitchAt(p.y) + 1, this.pitchAt(p.y) - 1]) {
@@ -63,7 +63,10 @@ export class PianoRoll extends EventTarget {
         if (p.x >= r.x - 2 && p.x <= right + 3 && p.y >= r.y - 2 && p.y <= r.y + r.h + 2) return { note: original, handle: r.w >= 28 && p.x >= right - Math.min(12, r.w / 3) };
       }
     }
-    for (const id of this.selected) { const n = this.noteById.get(id); if (!n) continue; const r = this.rect(n); if (r.w < 30 && Math.abs(p.x - (r.x + r.w + 12)) <= 14 && Math.abs(p.y - (r.y + r.h / 2)) <= 14) return { note: n, handle: true }; }
+    const n = this.noteById.get(this.selected.values().next().value ?? '');
+    if (n) { const r = this.rect(n); if (r.w < 30 && Math.abs(p.y - (r.y + r.h / 2)) <= 14) { const left = Math.abs(p.x - (r.x - 12)), right = Math.abs(p.x - (r.x + r.w + 12)); if (Math.min(left,right) <= 14) return { note: n, handle: right < left, affordance: true }; } }
+    // A tolerant target is safe for explicit picking: it cannot delete or move a neighbour.
+    if (this.picking) { let closest: Note | undefined, distance = 12; for (const n of this.byPitch[this.pitchAt(p.y)]) { const r = this.rect(n), d = Math.max(r.x-p.x, p.x-r.x-r.w, 0); if (d < distance) { closest = n; distance = d; } } if (closest) return {note: closest,handle:false}; }
   }
   phraseAt(p: Point) { if (p.y < 24 || p.y >= RULER_HEIGHT || p.x < KEY_WIDTH) return; const tick = this.tickAt(p.x); return this.phraseRanges.find(f => tick >= f.start && tick < f.end); }
   cancelPointer(e: PointerEvent) { if (this.keyPointers.has(e.pointerId)) { this.keyPointers.delete(e.pointerId); this.options.release(e.pointerId); this.invalidate(); } else { this.cancel(false, true); this.dispatchEvent(new Event('selection')); } }
@@ -99,7 +102,7 @@ export class PianoRoll extends EventTarget {
     if (phrase) { this.select(new Set(phrase.noteIds)); action = 'selected'; }
     else if (p.y < RULER_HEIGHT && p.x >= KEY_WIDTH) action = 'scrub';
     else if (this.picking) { action = hit ? 'pick' : 'select'; if (!hit) this.select(new Set()); }
-    this.gesture = { action, origin: p, view: { ...this.view }, target: hit?.note, handle: hit?.handle, moved: false, time: performance.now(), originals: hit ? this.selected.has(hit.note.id) ? this.store.project.notes.filter(n => this.selected.has(n.id)) : [hit.note] : [], selection, shift: e.shiftKey };
+    this.gesture = { action, origin: p, view: { ...this.view }, target: hit?.note, handle: hit?.handle, affordance: hit?.affordance, moved: false, time: performance.now(), originals: hit ? this.selected.has(hit.note.id) ? this.store.project.notes.filter(n => this.selected.has(n.id)) : [hit.note] : [], selection, shift: e.shiftKey };
     if (action === 'pending') this.longTimer = window.setTimeout(() => {
       const g = this.gesture; if (!g || g.moved || this.pointers.size !== 1 || this.navigationLatch) return;
       if (g.target) { const ids = g.shift ? new Set(this.selected) : this.selected.has(g.target.id) ? new Set(this.selected) : new Set<string>(); ids.add(g.target.id); this.select(ids); g.action = 'selected'; this.dispatchEvent(new Event('details')); }
@@ -164,7 +167,8 @@ export class PianoRoll extends EventTarget {
       } else if (g.action === 'pending' && !g.moved) {
         const releaseHit = this.hit(p);
         if (g.target && releaseHit?.note.id === g.target.id) {
-          if (g.shift) { const ids = new Set(this.selected); ids.has(g.target.id) ? ids.delete(g.target.id) : ids.add(g.target.id); this.select(ids); }
+          if (g.affordance) this.select(new Set(this.selected));
+          else if (g.shift) { const ids = new Set(this.selected); ids.has(g.target.id) ? ids.delete(g.target.id) : ids.add(g.target.id); this.select(ids); }
           else this.store.delete(new Set([g.target.id]));
         } else if (!g.target && p.x >= KEY_WIDTH && p.y >= RULER_HEIGHT) {
           const s = this.session(), note: Note = { id: uid(), partId: s.activePart, pitch: this.pitchAt(p.y), startTick: snapTick(this.tickAt(p.x), s.snap), durationTick: s.noteLength, velocity: 80 }; this.store.insert([note]); this.select(new Set([note.id])); if (!this.playing) this.options.audition(note.pitch, note.velocity);
@@ -225,7 +229,7 @@ export class PianoRoll extends EventTarget {
     c.globalAlpha = muted ? .25 : .68 + n.velocity / 127 * .32; c.fillStyle = color; c.beginPath(); c.roundRect(r.x + .5, r.y, Math.max(2, r.w - 1), r.h, Math.min(4, r.h / 3, r.w / 3)); c.fill(); c.globalAlpha = 1;
     if (selected || draft || this.gesture?.target?.id === n.id) { c.strokeStyle = draft ? '#2d213f' : '#3d275c'; c.lineWidth = 2; c.strokeRect(r.x + .5, r.y - .5, r.w - 1, r.h + 1); }
     if (r.w > 28 && r.h >= 12) { c.fillStyle = '#fff'; c.font = '500 10px system-ui'; c.textAlign = 'left'; c.fillText(noteName(n.pitch), r.x + 6, r.y + r.h * .73, r.w - 15); c.fillStyle = '#ffffff65'; c.fillRect(r.x + r.w - 7, r.y + r.h * .22, 2, r.h * .56); }
-    if (selected && r.w < 30) { c.strokeStyle = color; c.lineWidth = 2; c.beginPath(); c.moveTo(r.x + r.w, r.y + r.h / 2); c.lineTo(r.x + r.w + 12, r.y + r.h / 2); c.stroke(); c.fillStyle = '#fff'; c.beginPath(); c.arc(r.x + r.w + 12, r.y + r.h / 2, 8, 0, Math.PI * 2); c.fill(); c.stroke(); }
+    if (selected && this.selected.values().next().value === n.id && r.w < 30) { c.strokeStyle = color; c.lineWidth = 2; const y = r.y+r.h/2; for (const x of [r.x-12,r.x+r.w+12]) { c.beginPath(); c.moveTo(x,y); c.lineTo(x < r.x ? r.x : r.x+r.w,y); c.stroke(); c.fillStyle = '#fff'; c.beginPath(); c.arc(x,y,8,0,Math.PI*2); c.fill(); c.stroke(); c.beginPath(); c.moveTo(x-3,y); c.lineTo(x+3,y); if (x < r.x) { c.moveTo(x,y-3); c.lineTo(x,y+3); } c.stroke(); } }
   }
   key(e: KeyboardEvent) {
     if (e.key === 'Escape') { this.cancel(); this.select(new Set()); return; }
